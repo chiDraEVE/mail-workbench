@@ -1,0 +1,29 @@
+# IDE
+.idea/
+
+# Environment / Credentials
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local data
+reports/
+*.sql
+*.sqlite3
+*.db
+
+# OS
+.DS_Store
+Thumbs.db
