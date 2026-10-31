@@ -23,6 +23,8 @@ reports/
 *.sql
 *.sqlite3
 *.db
+!database/schema.sql
+!database/drop-schema.sql
 
 # OS
 .DS_Store
