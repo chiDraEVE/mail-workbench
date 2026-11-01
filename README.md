@@ -34,12 +34,12 @@ The initial focus is job advertisement processing. Additional modules may later 
 
 The initial architecture is based on the following components:
 
-| Component | Technology |
-|---|---|
-| Email processing | Python |
-| Database | MySQL |
-| Reporting | HTML |
-| Version control | Git |
+| Component               | Technology                   |
+|-------------------------|------------------------------|
+| Email processing        | Python                       |
+| Database                | MySQL                        |
+| Reporting               | HTML                         |
+| Version control         | Git                          |
 | Development environment | Ubuntu 24.04 / IntelliJ IDEA |
 
 A web interface may be added later. The processing logic should remain independent of the presentation layer.
@@ -52,9 +52,9 @@ A web interface may be added later. The processing logic should remain independe
 - [x] Initialize Git repository
 - [x] Configure local development environment
 - [x] Connect MySQL database in IntelliJ IDEA
-- [ ] Define project documentation and conventions
-- [ ] Create initial database schema
-- [ ] Set up Python environment and dependencies
+- [x] Define project documentation and conventions
+- [x] Create initial database schema
+- [x] Set up Python environment and dependencies
 
 ### Phase 2 – Email import
 
@@ -100,6 +100,78 @@ The following principles guide development:
 - Keep sensitive data and credentials outside version control.
 - Never modify or delete original emails during import.
 - Keep final job evaluation and application decisions under manual control.
+
+## Getting started
+
+The project currently contains the initial MySQL schema and a Python database
+connection helper. Python 3.10 or newer and a reachable MySQL 8.0-compatible
+server are required. Install the MySQL command-line client if you want to apply
+the schema from a terminal.
+
+1. Create and activate a virtual environment, then install dependencies:
+
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   python -m pip install -r requirements.txt
+   ```
+
+2. Create a local database and a user with access to it. For example, in a
+   MySQL administrative session:
+
+   ```sql
+   CREATE DATABASE `mail-workbench` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   CREATE USER 'mail-workbench'@'localhost' IDENTIFIED BY 'choose-a-local-password';
+   GRANT ALL PRIVILEGES ON `mail-workbench`.* TO 'mail-workbench'@'localhost';
+   ```
+
+3. Copy `.env.example` to `.env` and set `DB_HOST`, `DB_PORT`, `DB_NAME`,
+   `DB_USER` and `DB_PASSWORD` for your server. `.env` is ignored by Git; never
+   commit real credentials.
+
+4. Apply the schema (the database must already exist):
+
+   ```bash
+   mysql --host=localhost --user=mail-workbench --password mail-workbench < database/schema.sql
+   ```
+
+   The command prompts for the password. The script creates tables but does
+   not create the database or database user.
+
+5. Use the connection helper from Python:
+
+   ```python
+   from python.database import connect
+
+   connection = connect()
+   try:
+       with connection.cursor() as cursor:
+           cursor.execute("SELECT 1")
+           print(cursor.fetchone())
+   finally:
+       connection.close()
+   ```
+
+## Tests
+
+Run the unit suite with the standard library test runner:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+The integration test is opt-in and uses the database configured in `.env`.
+Install the schema first, then run:
+
+```bash
+RUN_DB_INTEGRATION=1 python -m unittest discover -s tests -v
+```
+
+It only performs a read-only connectivity query and checks for expected tables.
+The destructive `database/drop-schema.sql` script is not used by tests; execute
+it only when you intentionally want to remove all schema tables and data.
+
+More details: [Database setup](docs/database.md) and [Testing](docs/testing.md).
 
 ## Status
 
