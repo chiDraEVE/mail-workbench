@@ -25,34 +25,13 @@ Deduplizierung und Repository verwenden danach ausschließlich das gemeinsame
 `EmailRecord`-Modell. Ein zukünftiger IMAP-Adapter kann dieselbe Schnittstelle
 implementieren.
 
-Nur exakte E-Mail-Absender aus `JOB_SENDER_ALLOWLIST` werden importiert. Das
-verhindert beispielsweise, dass LinkedIn-Nachrichten oder Sicherheitsmails
-allein wegen der Plattformdomain als Stellenanzeige gelten. Der Abgleich ist
-ohne Beachtung der Groß-/Kleinschreibung; Anzeigename und Formatierung des
-`From`-Headers spielen keine Rolle.
-
-Beim Scan der konfigurierten Mailbox wurden neben den vom Nutzer genannten
-LinkedIn, Arbeitsagentur, Indeed und Instaffo auch Xing, Stepstone,
-Stellenanzeigen.de und Workwise als mögliche Jobquellen erkannt. Für die
-Defaults wurden nur eindeutige Job-Absender aufgenommen:
-
-| Quelle | Zugelassene Absender |
-|---|---|
-| LinkedIn | `jobalerts-noreply@linkedin.com`, `jobs-noreply@linkedin.com`, `jobs-listings@linkedin.com` |
-| Bundesagentur für Arbeit | `jobsuche@arbeitsagentur.de` |
-| Indeed | `alert@indeed.com`, `donotreply@jobalert.indeed.com` |
-| Instaffo | `notifications@app.instaffo.com` |
-| Xing | `jobs@mail.xing.com` |
-| Stepstone | `express@jobagent.stepstone.de` |
-| Stellenanzeigen.de | `jobs@stellenanzeigen.de` |
-| Workwise | `jobs@workwise.io` |
-
-Der Mailbox-Scan enthielt außerdem Absender von Malt, Hays, GULP, freelance.de,
-Join und weiteren Recruitingdiensten. Viele davon waren allgemeine Plattform-
-oder persönliche Recruiter-Absender; sie werden nicht pauschal freigeschaltet,
-weil das auch Bewerbungsupdates und andere Nachrichten importieren könnte.
-Weitere bestätigte Job-Absender können als vollständige Adressen in `.env`
-ergänzt werden. Die Liste ersetzt dann die Defaults. Nicht zugelassene
+Nur exakte E-Mail-Absender aus der verpflichtenden `JOB_SENDER_ALLOWLIST`
+werden importiert. Der Abgleich ignoriert Groß-/Kleinschreibung; Anzeigename
+und Formatierung des `From`-Headers spielen keine Rolle. Die persönliche Liste
+liegt in der lokalen `.env`-Datei, die Git ignoriert. Sie ist weder im Code
+hinterlegt noch in der Datenbank gespeichert. Trage dort nur bestätigte
+Job-Absender ein, da allgemeine Plattform- oder Recruiter-Absender auch
+Bewerbungsupdates und andere Nachrichten umfassen können. Nicht gelistete
 Nachrichten werden gezählt und übersprungen, aber nicht in der Datenbank
 gespeichert.
 
@@ -74,11 +53,15 @@ Löschlogik und keine Postfachaktionen.
 
 ## Schema aktualisieren
 
-Für eine neue Datenbank die aktuelle `database/schema.sql` ausführen. Für eine
-bereits erstellte Datenbank aus dem ursprünglichen Schema die Migration
-einmalig gemäß den [Befehlen in der README](../README.md#email-import) anwenden.
-Sie ergänzt Empfänger und Inhalte, macht den Inhalts-Hash eindeutig und legt
-Import- sowie Verarbeitungsstatus getrennt an.
+Für eine neue Datenbank ausschließlich die aktuelle `database/schema.sql`
+ausführen. Sie bildet den vollständigen aktuellen Tabellenstand ab.
+
+Nur wenn eine bestehende Datenbank noch die frühere E-Mail-Tabellenstruktur
+hat, stattdessen die Migration `002_email_import.sql` einmalig gemäß den
+[Befehlen in der README](../README.md#e-mail-import) anwenden. Die Migration
+bleibt als Upgrade-Pfad erhalten; sie wird nicht zusätzlich auf eine neue
+Datenbank angewendet. Ein separates Ursprungsschema ist nicht nötig, weil die
+Migrationsdateien die Änderungen für bestehende Installationen dokumentieren.
 
 ## Import ausführen
 
@@ -87,11 +70,13 @@ In `.env` setzen:
 ```dotenv
 MAIL_SOURCE_TYPE=mbox
 MAIL_SOURCE_PATH=/path/to/Thunderbird/Profile/ImapMail/account/INBOX
-JOB_SENDER_ALLOWLIST=jobalerts-noreply@linkedin.com,alert@indeed.com,jobsuche@arbeitsagentur.de,notifications@app.instaffo.com
+JOB_SENDER_ALLOWLIST=job-alerts@example.invalid,another-alert@example.invalid
 ```
 
-`JOB_SENDER_ALLOWLIST` kann weggelassen werden, um die Standardliste zu verwenden.
-Nach Datenbankmigration und Installation der Abhängigkeiten den Import mit dem
+`JOB_SENDER_ALLOWLIST` ist erforderlich und enthält eine kommaseparierte Liste
+exakter Absenderadressen. Ohne gültige Liste bricht der Import mit einer
+verständlichen Fehlermeldung ab.
+Nach Datenbankeinrichtung und Installation der Abhängigkeiten den Import mit dem
 Befehl im Abschnitt [E-Mail-Import der README](../README.md#e-mail-import)
 starten. Shell-Befehle im Projekt sind dort gesammelt und vom Repository-Root
 aus ausführbar.

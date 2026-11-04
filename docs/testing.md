@@ -16,9 +16,11 @@ addresses; they contain no mailbox data.
 Integration tests are skipped unless `RUN_DB_INTEGRATION=1` is set. They check
 the schema and import the anonymized fixture into MySQL, verifying sender
 filtering and a repeated import. The import test removes only the rows it created.
-Create the database and apply the current `database/schema.sql` (or migration
-`002_email_import.sql` on an existing database) before running the integration
-test command in the [README](../README.md#tests), from the repository root.
+Create the database and apply the current `database/schema.sql` for a new
+database. Use migration `002_email_import.sql` only when upgrading a database
+that still has the earlier email schema; do not apply both. Then run the
+integration test command in the [README](../README.md#tests), from the repository
+root.
 
 The configured database must be dedicated to development or testing. The
 integration test never runs `database/drop-schema.sql` and never reads the

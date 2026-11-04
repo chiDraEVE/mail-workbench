@@ -8,7 +8,7 @@ import os
 from dotenv import load_dotenv
 
 from python.database import PROJECT_ROOT, connect
-from .importer import DEFAULT_JOB_SENDER_ALLOWLIST, EmailImporter
+from .importer import EmailImporter
 from .thunderbird import ThunderbirdMboxSource
 
 
@@ -22,11 +22,10 @@ def main() -> int:
     source_path = os.getenv("MAIL_SOURCE_PATH")
     if not source_path:
         raise SystemExit("MAIL_SOURCE_PATH is required for the Thunderbird import")
-    configured_senders = os.getenv("JOB_SENDER_ALLOWLIST")
-    senders = (
-        [sender.strip() for sender in configured_senders.split(",") if sender.strip()]
-        if configured_senders else DEFAULT_JOB_SENDER_ALLOWLIST
-    )
+    configured_senders = os.getenv("JOB_SENDER_ALLOWLIST", "")
+    senders = [sender.strip() for sender in configured_senders.split(",") if sender.strip()]
+    if not senders:
+        raise SystemExit("JOB_SENDER_ALLOWLIST is required; set comma-separated sender addresses in .env")
 
     source = ThunderbirdMboxSource(source_path)
     connection = connect()

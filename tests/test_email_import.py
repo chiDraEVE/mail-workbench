@@ -8,13 +8,14 @@ import unittest
 import uuid
 from pathlib import Path
 
-from python.email_import.importer import DEFAULT_JOB_SENDER_ALLOWLIST, sender_is_allowed
+from python.email_import.importer import sender_is_allowed
 from python.email_import.parser import parse_message
 from python.email_import.thunderbird import ThunderbirdMboxSource
 from python.email_import.importer import EmailImporter
 
 
 FIXTURE = Path(__file__).parent / "fixtures" / "thunderbird_sample.mbox"
+TEST_ALLOWED_SENDERS = ("jobs@example.invalid", "alerts@example.invalid")
 
 
 class SenderFilterTests(unittest.TestCase):
@@ -22,16 +23,16 @@ class SenderFilterTests(unittest.TestCase):
 
     def test_accepts_known_exact_sender_with_display_name(self) -> None:
         """Accept exact job alert addresses regardless of display name."""
-        self.assertTrue(sender_is_allowed("LinkedIn Jobs <jobalerts-noreply@linkedin.com>", DEFAULT_JOB_SENDER_ALLOWLIST))
-        self.assertTrue(sender_is_allowed("donotreply@jobalert.indeed.com", DEFAULT_JOB_SENDER_ALLOWLIST))
+        self.assertTrue(sender_is_allowed("Job Alerts <jobs@example.invalid>", TEST_ALLOWED_SENDERS))
+        self.assertTrue(sender_is_allowed("alerts@example.invalid", TEST_ALLOWED_SENDERS))
 
     def test_rejects_lookalike_and_non_job_addresses(self) -> None:
         """Reject unknown addresses on approved platforms and unrelated senders."""
         for sender in (
-            "messages-noreply@linkedin.com", "friend@example.net", "no-address", None
+            "unknown@example.invalid", "friend@example.net", "no-address", None
         ):
             with self.subTest(sender=sender):
-                self.assertFalse(sender_is_allowed(sender, DEFAULT_JOB_SENDER_ALLOWLIST))
+                self.assertFalse(sender_is_allowed(sender, TEST_ALLOWED_SENDERS))
 
 
 class MessageParserTests(unittest.TestCase):
@@ -51,7 +52,7 @@ class MessageParserTests(unittest.TestCase):
         """Decode sender, recipients, date, plain text and HTML content."""
         record = parse_message(self.multipart)
         self.assertEqual(record.message_id, "<fixture-job-003@example.invalid>")
-        self.assertEqual(record.sender, "jobalerts-noreply@linkedin.com")
+        self.assertEqual(record.sender, "jobs@example.invalid")
         self.assertEqual(record.recipients, ("candidate@example.invalid", "copy@example.invalid"))
         self.assertIn("Plain text", record.text_body or "")
         self.assertIn("<html>", record.html_body or "")
@@ -93,9 +94,9 @@ class EmailImportIntegrationTests(unittest.TestCase):
         connection = connect()
         cursor = connection.cursor()
         try:
-            first = EmailImporter(connection, DEFAULT_JOB_SENDER_ALLOWLIST).import_source(source)
+            first = EmailImporter(connection, TEST_ALLOWED_SENDERS).import_source(source)
             self.assertEqual((first.scanned, first.filtered, first.imported), (4, 1, 3))
-            second = EmailImporter(connection, DEFAULT_JOB_SENDER_ALLOWLIST).import_source(source)
+            second = EmailImporter(connection, TEST_ALLOWED_SENDERS).import_source(source)
             self.assertEqual(second.imported, 0)
             self.assertEqual(second.duplicates, 3)
 

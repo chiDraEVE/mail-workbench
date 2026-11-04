@@ -13,17 +13,6 @@ from .parser import parse_message
 
 LOGGER = logging.getLogger(__name__)
 
-# Exact job-notification senders identified in the configured mailbox.
-DEFAULT_JOB_SENDER_ALLOWLIST = frozenset({
-    "jobalerts-noreply@linkedin.com", "jobs-noreply@linkedin.com",
-    "jobs-listings@linkedin.com", "jobsuche@arbeitsagentur.de",
-    "alert@indeed.com", "donotreply@jobalert.indeed.com",
-    "notifications@app.instaffo.com", "jobs@mail.xing.com",
-    "express@jobagent.stepstone.de", "jobs@stellenanzeigen.de",
-    "jobs@workwise.io",
-})
-
-
 def sender_is_allowed(sender: str | None, allowed_senders: Iterable[str]) -> bool:
     """Return whether a sender mailbox exactly matches an approved address."""
     address = parseaddr(sender or "")[1].lower()

@@ -1,6 +1,6 @@
-From alert@indeed.com Sat Jan 10 10:00:00 2026
+From alerts@example.invalid Sat Jan 10 10:00:00 2026
 Message-ID: <fixture-job-001@example.invalid>
-From: Indeed Job Alert <alert@indeed.com>
+From: Job Alerts <alerts@example.invalid>
 To: candidate@example.invalid
 Date: Sat, 10 Jan 2026 10:00:00 +0000
 Subject: Example job alert
@@ -20,9 +20,9 @@ Content-Type: text/plain; charset="utf-8"
 
 Synthetic personal message; this must be filtered out.
 
-From jobalerts-noreply@linkedin.com Sat Jan 10 12:00:00 2026
+From jobs@example.invalid Sat Jan 10 12:00:00 2026
 Message-ID: <fixture-job-003@example.invalid>
-From: LinkedIn Jobs <jobalerts-noreply@linkedin.com>
+From: Job Alerts <jobs@example.invalid>
 To: candidate@example.invalid
 Cc: copy@example.invalid
 Date: Sat, 10 Jan 2026 12:00:00 +0000
@@ -40,8 +40,8 @@ Content-Type: text/html; charset="utf-8"
 <html><body><p>HTML job listing.</p></body></html>
 --fixture-boundary--
 
-From notifications@app.instaffo.com Sat Jan 10 13:00:00 2026
-From: Instaffo <notifications@app.instaffo.com>
+From jobs@example.invalid Sat Jan 10 13:00:00 2026
+From: Job Alerts <jobs@example.invalid>
 To: candidate@example.invalid
 Subject: Incomplete example alert
 Content-Type: text/plain; charset="utf-8"

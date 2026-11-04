@@ -4,7 +4,7 @@ A local, modular automation project for processing emails and extracting useful 
 
 ## Motivation
 
-My inbox contains a growing number of automated emails that require manual review. Job alerts from platforms such as LinkedIn, Indeed and the German Federal Employment Agency are a particular example.
+My inbox contains a growing number of automated emails that require manual review. Job alerts are a particular example.
 
 Processing these emails manually involves several repetitive tasks:
 
@@ -181,18 +181,23 @@ More details: [Database setup](docs/database.md) and [Testing](docs/testing.md).
 
 ## E-Mail-Import
 
-Configure `MAIL_SOURCE_TYPE=mbox` and `MAIL_SOURCE_PATH` in `.env` to point to
-one Thunderbird MBOX file. Only exact approved job-notification sender
-addresses are imported; configure `JOB_SENDER_ALLOWLIST` to override the documented
-defaults. For a database that already has the original schema, apply the
-one-time migration from the repository root:
+Configure `MAIL_SOURCE_TYPE=mbox`, `MAIL_SOURCE_PATH`, and the required
+`JOB_SENDER_ALLOWLIST` in `.env` to point to one Thunderbird MBOX file and list
+the exact sender addresses to import. Sender addresses are kept in the ignored
+local `.env` file and are not stored in the database.
+
+For a new database, apply the current `database/schema.sql` as described in
+[Database setup](docs/database.md). If an existing database still has the
+earlier email tables, apply the one-time migration from the repository root
+instead:
 
 ```bash
 mysql --host=localhost --user=mail-workbench --password mail-workbench < database/migrations/002_email_import.sql
 ```
 
-The MySQL client prompts for the password. After applying the schema or
-migration, run the importer from the repository root:
+Do not apply both scripts to the same database. The MySQL client prompts for
+the password. After setting up the database, run the importer from the
+repository root:
 
 ```bash
 python -m python.email_import.cli
