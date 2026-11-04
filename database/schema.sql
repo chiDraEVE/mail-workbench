@@ -102,14 +102,50 @@ CREATE TABLE email_messages (
                                 id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                                 message_id VARCHAR(500) NULL,
                                 sender VARCHAR(500) NULL,
+                                recipients TEXT NULL,
                                 subject VARCHAR(1000) NULL,
                                 received_at DATETIME NULL,
+                                text_body LONGTEXT NULL,
+                                html_body LONGTEXT NULL,
                                 content_hash CHAR(64) NULL,
                                 imported_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
                                 UNIQUE KEY uq_email_messages_message_id (message_id),
-                                INDEX idx_email_messages_received_at (received_at),
-                                INDEX idx_email_messages_content_hash (content_hash)
+                                UNIQUE KEY uq_email_messages_content_hash (content_hash),
+                                INDEX idx_email_messages_received_at (received_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+CREATE TABLE email_imports (
+                               id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                               email_id BIGINT UNSIGNED NULL,
+                               source_type VARCHAR(50) NOT NULL,
+                               source_id VARCHAR(1000) NOT NULL,
+                               source_fingerprint CHAR(64) NOT NULL,
+                               source_key CHAR(64) NOT NULL,
+                               import_status VARCHAR(30) NOT NULL,
+                               error_detail TEXT NULL,
+                               imported_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+                               CONSTRAINT fk_email_imports_email
+                                   FOREIGN KEY (email_id) REFERENCES email_messages(id)
+                                       ON DELETE SET NULL,
+                               UNIQUE KEY uq_email_import_source (source_type, source_fingerprint, source_key),
+                               INDEX idx_email_imports_status (import_status),
+                               INDEX idx_email_imports_email (email_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+CREATE TABLE email_processing (
+                                  email_id BIGINT UNSIGNED PRIMARY KEY,
+                                  processing_status VARCHAR(30) NOT NULL DEFAULT 'pending',
+                                  error_detail TEXT NULL,
+                                  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                      ON UPDATE CURRENT_TIMESTAMP,
+
+                                  CONSTRAINT fk_email_processing_email
+                                      FOREIGN KEY (email_id) REFERENCES email_messages(id)
+                                          ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 

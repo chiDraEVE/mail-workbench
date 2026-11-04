@@ -1,0 +1,50 @@
+From alert@indeed.com Sat Jan 10 10:00:00 2026
+Message-ID: <fixture-job-001@example.invalid>
+From: Indeed Job Alert <alert@indeed.com>
+To: candidate@example.invalid
+Date: Sat, 10 Jan 2026 10:00:00 +0000
+Subject: Example job alert
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+
+Synthetic job alert for a software engineer role.
+
+From friend@example.net Sat Jan 10 11:00:00 2026
+Message-ID: <fixture-personal-002@example.invalid>
+From: Example Friend <friend@example.net>
+To: candidate@example.invalid
+Date: Sat, 10 Jan 2026 11:00:00 +0000
+Subject: Personal note
+Content-Type: text/plain; charset="utf-8"
+
+Synthetic personal message; this must be filtered out.
+
+From jobalerts-noreply@linkedin.com Sat Jan 10 12:00:00 2026
+Message-ID: <fixture-job-003@example.invalid>
+From: LinkedIn Jobs <jobalerts-noreply@linkedin.com>
+To: candidate@example.invalid
+Cc: copy@example.invalid
+Date: Sat, 10 Jan 2026 12:00:00 +0000
+Subject: Another example role
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="fixture-boundary"
+
+--fixture-boundary
+Content-Type: text/plain; charset="utf-8"
+
+Plain text job listing.
+--fixture-boundary
+Content-Type: text/html; charset="utf-8"
+
+<html><body><p>HTML job listing.</p></body></html>
+--fixture-boundary--
+
+From notifications@app.instaffo.com Sat Jan 10 13:00:00 2026
+From: Instaffo <notifications@app.instaffo.com>
+To: candidate@example.invalid
+Subject: Incomplete example alert
+Content-Type: text/plain; charset="utf-8"
+
+An eligible message without Message-ID and Date; hash-based deduplication applies.
+

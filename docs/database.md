@@ -21,14 +21,10 @@ values in `.env`. Keep `.env` private; Git ignores it.
 
 ## Create the database and apply the schema
 
-Create an empty database and an account permitted to use it, then apply the
-schema from the repository root:
-
-```bash
-mysql --host=localhost --user=mail-workbench --password mail-workbench < database/schema.sql
-```
-
-The MySQL client prompts for the password. The schema file creates tables in
+Create an empty database and an account permitted to use it, then follow the
+root-level [Getting started](../README.md#getting-started) instructions to
+apply the schema. Run the documented shell commands from the repository root;
+the MySQL client prompts for the password. The schema file creates tables in
 the selected database and does not create the database itself. Running it a
 second time will fail when its tables already exist.
 

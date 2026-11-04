@@ -59,9 +59,21 @@ class DatabaseIntegrationTests(unittest.TestCase):
                 cursor.execute("SHOW TABLES")
                 tables = {row[0] for row in cursor.fetchall()}
                 self.assertTrue(
-                    {"companies", "jobs", "job_publications", "email_messages"}
+                    {
+                        "companies", "jobs", "job_publications", "email_messages",
+                        "email_imports", "email_processing",
+                    }
                     <= tables
                 )
+                cursor.execute("SHOW COLUMNS FROM email_messages")
+                columns = {row[0] for row in cursor.fetchall()}
+                self.assertTrue({"recipients", "text_body", "html_body"} <= columns)
+                cursor.execute("SHOW INDEX FROM email_messages")
+                unique_hash = any(
+                    row[2] == "uq_email_messages_content_hash" and row[1] == 0
+                    for row in cursor.fetchall()
+                )
+                self.assertTrue(unique_hash)
             finally:
                 cursor.close()
         finally:

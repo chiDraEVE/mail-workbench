@@ -1,0 +1,101 @@
+# E-Mail-Import
+
+## Thunderbird-Quelle
+
+Der Import nutzt `MAIL_SOURCE_TYPE=mbox` und `MAIL_SOURCE_PATH` aus `.env`.
+Thunderbird speichert POP-Konten und „Lokale Ordner“ üblicherweise unter
+`<Profil>/Mail/`, synchronisierte IMAP-Ordner unter `<Profil>/ImapMail/`.
+Relevant sind die MBOX-Dateien mit dem jeweiligen Ordnernamen, oft ohne
+Dateiendung. `.msf` enthält Indexdaten und wird ignoriert; `.sbd` ist ein
+Verzeichnis für Unterordner und wird nicht selbst als Mailbox gelesen. Ein
+IMAP-Ordner ist lokal importierbar, wenn Thunderbird ihn synchronisiert hat.
+Siehe auch die [Mozilla-Hilfe zu lokalen Mail-Verzeichnissen](https://support.mozilla.org/en-US/kb/dangerous-directories-Thunderbird-account-settings).
+
+Der konfigurierte Pfad in diesem Arbeitsstand ist eine MBOX-Datei unter
+`ImapMail/clubitsolutions.de/INBOX`. Die Quelle umfasst 1.734 Nachrichten.
+Zur stabilen Momentaufnahme Thunderbird während eines Imports schließen oder
+eine Profilkopie als Quelle verwenden. Der Adapter öffnet die MBOX nur lesend;
+Mailbox-Dateien und E-Mails werden nicht verändert.
+
+## Verarbeitung und Filter
+
+`ImportSource` ist die gemeinsame Schnittstelle für Quellen. Der
+`ThunderbirdMboxSource` liefert rohe Nachrichtenbytes; Parser, Absenderfilter,
+Deduplizierung und Repository verwenden danach ausschließlich das gemeinsame
+`EmailRecord`-Modell. Ein zukünftiger IMAP-Adapter kann dieselbe Schnittstelle
+implementieren.
+
+Nur exakte E-Mail-Absender aus `JOB_SENDER_ALLOWLIST` werden importiert. Das
+verhindert beispielsweise, dass LinkedIn-Nachrichten oder Sicherheitsmails
+allein wegen der Plattformdomain als Stellenanzeige gelten. Der Abgleich ist
+ohne Beachtung der Groß-/Kleinschreibung; Anzeigename und Formatierung des
+`From`-Headers spielen keine Rolle.
+
+Beim Scan der konfigurierten Mailbox wurden neben den vom Nutzer genannten
+LinkedIn, Arbeitsagentur, Indeed und Instaffo auch Xing, Stepstone,
+Stellenanzeigen.de und Workwise als mögliche Jobquellen erkannt. Für die
+Defaults wurden nur eindeutige Job-Absender aufgenommen:
+
+| Quelle | Zugelassene Absender |
+|---|---|
+| LinkedIn | `jobalerts-noreply@linkedin.com`, `jobs-noreply@linkedin.com`, `jobs-listings@linkedin.com` |
+| Bundesagentur für Arbeit | `jobsuche@arbeitsagentur.de` |
+| Indeed | `alert@indeed.com`, `donotreply@jobalert.indeed.com` |
+| Instaffo | `notifications@app.instaffo.com` |
+| Xing | `jobs@mail.xing.com` |
+| Stepstone | `express@jobagent.stepstone.de` |
+| Stellenanzeigen.de | `jobs@stellenanzeigen.de` |
+| Workwise | `jobs@workwise.io` |
+
+Der Mailbox-Scan enthielt außerdem Absender von Malt, Hays, GULP, freelance.de,
+Join und weiteren Recruitingdiensten. Viele davon waren allgemeine Plattform-
+oder persönliche Recruiter-Absender; sie werden nicht pauschal freigeschaltet,
+weil das auch Bewerbungsupdates und andere Nachrichten importieren könnte.
+Weitere bestätigte Job-Absender können als vollständige Adressen in `.env`
+ergänzt werden. Die Liste ersetzt dann die Defaults. Nicht zugelassene
+Nachrichten werden gezählt und übersprungen, aber nicht in der Datenbank
+gespeichert.
+
+Extrahiert werden Message-ID, From, To/Cc/Bcc, Subject, der RFC-5322-Date-Wert
+als UTC `DATETIME`, Text und HTML. Bei Multipart-Mails bleiben Text und HTML
+separat erhalten; Attachments werden nicht gespeichert. Fehlt Message-ID,
+Datum oder ein anderer Header, bleibt die Nachricht importierbar, sofern der
+Absender zugelassen ist. Parserdefekte werden am Importdatensatz dokumentiert.
+Eine Nachricht ohne ermittelbaren Absender wird übersprungen.
+
+## Idempotenz und Zustände
+
+Message-ID ist der primäre Deduplizierungsschlüssel; SHA-256 des normalisierten
+RFC-Nachrichteninhalts ist der zusätzliche eindeutige Schlüssel. Der Hash
+ermöglicht Deduplizierung auch bei fehlender Message-ID. `email_imports` hält
+Quellbezug, Importstatus und Fehler fest. `email_processing` speichert separat
+den Verarbeitungsstatus. Es gibt in dieser Phase keine Archivierungs- oder
+Löschlogik und keine Postfachaktionen.
+
+## Schema aktualisieren
+
+Für eine neue Datenbank die aktuelle `database/schema.sql` ausführen. Für eine
+bereits erstellte Datenbank aus dem ursprünglichen Schema die Migration
+einmalig gemäß den [Befehlen in der README](../README.md#email-import) anwenden.
+Sie ergänzt Empfänger und Inhalte, macht den Inhalts-Hash eindeutig und legt
+Import- sowie Verarbeitungsstatus getrennt an.
+
+## Import ausführen
+
+In `.env` setzen:
+
+```dotenv
+MAIL_SOURCE_TYPE=mbox
+MAIL_SOURCE_PATH=/path/to/Thunderbird/Profile/ImapMail/account/INBOX
+JOB_SENDER_ALLOWLIST=jobalerts-noreply@linkedin.com,alert@indeed.com,jobsuche@arbeitsagentur.de,notifications@app.instaffo.com
+```
+
+`JOB_SENDER_ALLOWLIST` kann weggelassen werden, um die Standardliste zu verwenden.
+Nach Datenbankmigration und Installation der Abhängigkeiten den Import mit dem
+Befehl im Abschnitt [E-Mail-Import der README](../README.md#e-mail-import)
+starten. Shell-Befehle im Projekt sind dort gesammelt und vom Repository-Root
+aus ausführbar.
+
+Die Ausgabe enthält nur Zähler (gescannt, gefiltert, importiert, Duplikate,
+Fehler/Warnungen). Jeder Datensatz wird einzeln committed, sodass ein späterer
+Lauf bereits erfolgreich importierte Nachrichten überspringt.

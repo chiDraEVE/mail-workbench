@@ -58,10 +58,11 @@ A web interface may be added later. The processing logic should remain independe
 
 ### Phase 2 – Email import
 
-- [ ] Inspect and understand the local email storage format
-- [ ] Implement read-only email import
-- [ ] Extract relevant metadata and URLs
-- [ ] Store imported messages and extracted listings
+- [x] Inspect and understand the local email storage format
+- [x] Implement read-only Thunderbird MBOX import
+- [x] Extract message metadata and text/HTML content
+- [x] Store imported messages with deduplication and separate status tracking
+- [ ] Extract job listings and their URLs
 
 ### Phase 3 – Job listing analysis
 
@@ -103,10 +104,10 @@ The following principles guide development:
 
 ## Getting started
 
-The project currently contains the initial MySQL schema and a Python database
-connection helper. Python 3.10 or newer and a reachable MySQL 8.0-compatible
-server are required. Install the MySQL command-line client if you want to apply
-the schema from a terminal.
+The project contains a read-only Thunderbird MBOX importer and a MySQL database
+layer. Python 3.10 or newer and a reachable MySQL 8.0-compatible server are
+required. Install the MySQL command-line client if you want to apply the schema
+from a terminal.
 
 1. Create and activate a virtual environment, then install dependencies:
 
@@ -115,6 +116,11 @@ the schema from a terminal.
    source .venv/bin/activate
    python -m pip install -r requirements.txt
    ```
+
+   Run Python commands with this virtual environment active. This ensures the
+   project uses the supported `mysql-connector-python` from `requirements.txt`
+   instead of an older system-installed MySQL connector (which can fail with
+   `AttributeError: module 'ssl' has no attribute 'wrap_socket'`).
 
 2. Create a local database and a user with access to it. For example, in a
    MySQL administrative session:
@@ -173,11 +179,35 @@ it only when you intentionally want to remove all schema tables and data.
 
 More details: [Database setup](docs/database.md) and [Testing](docs/testing.md).
 
+## E-Mail-Import
+
+Configure `MAIL_SOURCE_TYPE=mbox` and `MAIL_SOURCE_PATH` in `.env` to point to
+one Thunderbird MBOX file. Only exact approved job-notification sender
+addresses are imported; configure `JOB_SENDER_ALLOWLIST` to override the documented
+defaults. For a database that already has the original schema, apply the
+one-time migration from the repository root:
+
+```bash
+mysql --host=localhost --user=mail-workbench --password mail-workbench < database/migrations/002_email_import.sql
+```
+
+The MySQL client prompts for the password. After applying the schema or
+migration, run the importer from the repository root:
+
+```bash
+python -m python.email_import.cli
+```
+
+The importer never modifies mailbox data and performs no archive or delete
+actions. See [E-Mail-Import](docs/email-import.md) for Thunderbird storage,
+filtering, migration, and adapter details.
+
 ## Status
 
 <badge color="warning">Early development</badge>
 
-The project is currently in its initial setup phase. No functional email-processing pipeline has been implemented yet.
+The project is in early development. Phase 2 provides a local Thunderbird
+import foundation; downstream job extraction and reporting are not implemented.
 
 Features and architectural decisions may change as development progresses.
 

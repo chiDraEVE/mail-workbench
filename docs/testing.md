@@ -1,26 +1,25 @@
 # Testing
 
 Tests use Python's built-in `unittest` runner; no extra test framework is needed.
-Install project dependencies from the repository root and run unit tests:
+Install project dependencies and run unit tests using the commands in the
+[README](../README.md#getting-started) and [Tests](../README.md#tests) sections.
+Run shell commands from the repository root with the project virtual
+environment active.
 
-```bash
-python -m pip install -r requirements.txt
-python -m unittest discover -s tests -v
-```
-
-Unit tests isolate the connection helper from MySQL and verify configuration
-validation and connection arguments.
+Unit tests cover connection configuration, exact sender matching, MIME
+extraction, malformed metadata and the read-only Thunderbird MBOX adapter.
+Fixtures in `tests/fixtures/` are synthetic and use reserved `.invalid`
+addresses; they contain no mailbox data.
 
 ## Integration test
 
-The integration test is skipped unless `RUN_DB_INTEGRATION=1` is set. It opens
-the MySQL database configured in `.env`, issues `SELECT 1`, and checks that
-several initial schema tables exist. It does not create, update or delete data.
-Create the database and apply `database/schema.sql` before running:
-
-```bash
-RUN_DB_INTEGRATION=1 python -m unittest discover -s tests -v
-```
+Integration tests are skipped unless `RUN_DB_INTEGRATION=1` is set. They check
+the schema and import the anonymized fixture into MySQL, verifying sender
+filtering and a repeated import. The import test removes only the rows it created.
+Create the database and apply the current `database/schema.sql` (or migration
+`002_email_import.sql` on an existing database) before running the integration
+test command in the [README](../README.md#tests), from the repository root.
 
 The configured database must be dedicated to development or testing. The
-integration test never runs `database/drop-schema.sql`.
+integration test never runs `database/drop-schema.sql` and never reads the
+configured real Thunderbird mailbox.
