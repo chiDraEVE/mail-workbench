@@ -87,7 +87,7 @@ A web interface may be added later. The processing logic should remain independe
 - [x] Implement read-only Thunderbird MBOX import
 - [x] Extract message metadata and text/HTML content
 - [x] Store imported messages with deduplication and separate status tracking
-- [ ] Extract job listings and their URLs
+- [x] Extract job listings and their URLs from supported email templates
 
 ### Phase 3 – Job listing analysis
 
@@ -237,9 +237,10 @@ python -m python.email_import.cli
 ```
 
 The importer never modifies mailbox data and performs no archive or delete
-actions. See [Email import](docs/email-import.en.md) for Thunderbird storage,
-filtering, migration, and adapter details. [Die deutsche Fassung](docs/email-import.md)
-is also available.
+actions. It extracts supported job alerts and links each listing back to its
+source email. See [Email import](docs/email-import.en.md) for Thunderbird
+storage, filtering, extraction, migration, and adapter details. [Die deutsche
+Fassung](docs/email-import.md) is also available.
 
 <p align="right"><a href="#top">Back to top ↑</a></p>
 

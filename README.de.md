@@ -87,7 +87,7 @@ Eine Weboberfläche kann später hinzukommen. Die Verarbeitungslogik soll unabh�
 - [x] Schreibgeschützten Thunderbird-MBOX-Import implementieren
 - [x] Nachrichten-Metadaten sowie Text- und HTML-Inhalte extrahieren
 - [x] Importierte Nachrichten mit Duplikaterkennung und getrennten Statusangaben speichern
-- [ ] Stellenanzeigen und ihre URLs extrahieren
+- [x] Stellenanzeigen und ihre URLs aus unterstützten E-Mail-Vorlagen extrahieren
 
 ### Phase 3 – Analyse von Stellenanzeigen
 
@@ -215,7 +215,7 @@ Beide Skripte nicht auf dieselbe Datenbank anwenden. MySQL fragt nach dem Passwo
 python -m python.email_import.cli
 ```
 
-Der Import verändert keine Mailboxdaten und archiviert oder löscht keine Nachrichten. Weitere Informationen zu Thunderbird, Filterung, Migration und Adaptern stehen in der [Dokumentation zum E-Mail-Import](docs/email-import.md).
+Der Import verändert keine Mailboxdaten und archiviert oder löscht keine Nachrichten. Erkannte Stellenanzeigen werden mit ihrer Ursprungs-E-Mail verknüpft. Weitere Informationen zu Thunderbird, Filterung, Extraktion, Migration und Adaptern stehen in der [Dokumentation zum E-Mail-Import](docs/email-import.md).
 
 <p align="right"><a href="#top">Nach oben ↑</a></p>
 

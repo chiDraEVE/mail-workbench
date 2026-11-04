@@ -35,6 +35,29 @@ Bewerbungsupdates und andere Nachrichten umfassen können. Nicht gelistete
 Nachrichten werden gezählt und übersprungen, aber nicht in der Datenbank
 gespeichert.
 
+Der tatsächliche Absender aus dem `From`-Header wird in
+`email_messages.sender` gespeichert. Davon getrennt bezeichnet
+`email_imports.source_type` den Importweg (derzeit `thunderbird_mbox`) und
+`source_id` die Mailbox. Die Plattform einer später extrahierten Stellenanzeige
+ist wiederum eine eigene Angabe in `job_publications.platform`. Eine Zuordnung
+zu einem Extractor erfolgt anhand der Absenderdomain. Die persönliche
+`JOB_SENDER_ALLOWLIST` bleibt davon getrennt in `.env`.
+
+## Stellenanzeigen extrahieren
+
+Nach dem E-Mail-Import verarbeitet der CLI-Lauf neue Nachrichten mit einem
+passenden portal-spezifischen Extractor. Die erste Version unterstützt
+Arbeitsagentur, Indeed, LinkedIn, XING, Stepstone, Instaffo, Stellenanzeigen.de
+und Workwise. Sie speichert erkannte Stellen als `jobs` und `job_publications`
+und verknüpft sie über `email_observations` mit der Ursprungs-E-Mail. Titel und
+Link sind die Mindestfelder. Der Indeed-Extractor übernimmt zusätzlich Firma,
+Ort und Beschreibung; weitere Metadaten können pro Portal ergänzt werden.
+
+`email_processing.processing_status` wechselt danach auf `processed`, `no_jobs`,
+`unsupported` oder `error`. Exakt gleiche Stellen-URLs werden wiederverwendet;
+eine Normalisierung unterschiedlicher Tracking-Links ist noch nicht Teil
+dieser Phase.
+
 Extrahiert werden Message-ID, From, To/Cc/Bcc, Subject, der RFC-5322-Date-Wert
 als UTC `DATETIME`, Text und HTML. Bei Multipart-Mails bleiben Text und HTML
 separat erhalten; Attachments werden nicht gespeichert. Fehlt Message-ID,

@@ -31,6 +31,29 @@ confirmed job alert senders, since general platform or recruiter addresses may
 also be used for application updates and unrelated messages. Messages from
 unlisted senders are counted and skipped without being stored in the database.
 
+The actual sender from the `From` header is stored in
+`email_messages.sender`. Separately, `email_imports.source_type` identifies the
+import method (currently `thunderbird_mbox`), and `source_id` identifies the
+mailbox. The platform hosting a job listing extracted later is a different
+piece of information, stored in `job_publications.platform`. Sender addresses
+select an extractor by their domain. The personal `JOB_SENDER_ALLOWLIST` remains
+separate in `.env`.
+
+## Job extraction
+
+After email import, the CLI processes new messages with a portal-specific
+extractor when one is available. The initial version supports the German
+Federal Employment Agency, Indeed, LinkedIn, XING, Stepstone, Instaffo,
+Stellenanzeigen.de, and Workwise. It stores recognized listings in `jobs` and
+`job_publications` and links them to their source email through
+`email_observations`. Title and URL are the minimum fields. The Indeed
+extractor also stores company, location, and description; additional metadata
+can be added per portal.
+
+`email_processing.processing_status` is then set to `processed`, `no_jobs`,
+`unsupported`, or `error`. Exact matching job URLs are reused; normalizing
+different tracking links is outside this phase.
+
 The importer extracts Message-ID, From, To/Cc/Bcc, Subject, the RFC 5322 date
 as a UTC `DATETIME`, and text and HTML bodies. Text and HTML remain separate
 for multipart messages; attachments are not stored. A message can still be

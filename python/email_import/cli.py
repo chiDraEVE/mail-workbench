@@ -10,10 +10,11 @@ from dotenv import load_dotenv
 from python.database import PROJECT_ROOT, connect
 from .importer import EmailImporter
 from .thunderbird import ThunderbirdMboxSource
+from python.job_extraction.processor import EmailJobProcessor
 
 
 def main() -> int:
-    """Run a read-only Thunderbird import and print aggregate counters."""
+    """Import Thunderbird messages and extract job listings into MySQL."""
     load_dotenv(PROJECT_ROOT / ".env")
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
     source_type = os.getenv("MAIL_SOURCE_TYPE", "mbox").strip().lower()
@@ -31,11 +32,17 @@ def main() -> int:
     connection = connect()
     try:
         summary = EmailImporter(connection, senders).import_source(source)
+        processing = EmailJobProcessor(connection).process_pending()
     finally:
         connection.close()
     print(
         "Scanned {scanned}; filtered {filtered}; imported {imported}; "
         "duplicates {duplicates}; errors/warnings {errors}".format(**summary.__dict__)
+    )
+    print(
+        "Processed {emails_processed}; jobs found {jobs_found}; "
+        "without jobs {emails_without_jobs}; unsupported senders {unsupported_senders}; "
+        "processing errors {errors}".format(**processing.__dict__)
     )
     return 0
 
