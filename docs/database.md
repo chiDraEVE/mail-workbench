@@ -1,5 +1,7 @@
 # Database setup
 
+**Languages:** English · [Deutsch](database.de.md) · [German README](../README.de.md)
+
 Mail Workbench uses MySQL and the tables defined in [`../database/schema.sql`](../database/schema.sql).
 Use Python 3.10 or newer, a MySQL 8.0-compatible server and the dependencies in
 [`../requirements.txt`](../requirements.txt).

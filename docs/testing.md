@@ -1,5 +1,7 @@
 # Testing
 
+**Languages:** English · [Deutsch](testing.de.md) · [German README](../README.de.md)
+
 Tests use Python's built-in `unittest` runner; no extra test framework is needed.
 Install project dependencies and run unit tests using the commands in the
 [README](../README.md#getting-started) and [Tests](../README.md#tests) sections.

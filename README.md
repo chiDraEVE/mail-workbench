@@ -1,5 +1,24 @@
 # Mail Workbench
 
+<a id="top"></a>
+
+**Languages:** English · [Deutsch](README.de.md)
+
+## Contents
+
+- [Motivation](#motivation)
+- [Goals](#goals)
+- [Planned architecture](#planned-architecture)
+- [Development roadmap](#development-roadmap)
+- [Development principles](#development-principles)
+- [Getting started](#getting-started)
+- [Tests](#tests)
+- [Email import](#e-mail-import)
+- [Status](#status)
+- [License](#license)
+
+**Documentation:** [Database setup (EN)](docs/database.md) · [Datenbank einrichten (DE)](docs/database.de.md) · [Testing (EN)](docs/testing.md) · [Tests (DE)](docs/testing.de.md) · [Email import (EN)](docs/email-import.en.md) · [E-Mail-Import (DE)](docs/email-import.md)
+
 A local, modular automation project for processing emails and extracting useful information from different sources.
 
 ## Motivation
@@ -17,6 +36,8 @@ Processing these emails manually involves several repetitive tasks:
 
 The goal of Mail Workbench is to automate the repetitive parts of this workflow while keeping important decisions under manual control.
 
+<p align="right"><a href="#top">Back to top ↑</a></p>
+
 ## Goals
 
 The project is intended to provide:
@@ -29,6 +50,8 @@ The project is intended to provide:
 - **Modularity:** Support different email-processing workflows through separate modules.
 
 The initial focus is job advertisement processing. Additional modules may later handle security reports from NinjaFirewall and DMARC aggregate reports.
+
+<p align="right"><a href="#top">Back to top ↑</a></p>
 
 ## Planned Architecture
 
@@ -43,6 +66,8 @@ The initial architecture is based on the following components:
 | Development environment | Ubuntu 24.04 / IntelliJ IDEA |
 
 A web interface may be added later. The processing logic should remain independent of the presentation layer.
+
+<p align="right"><a href="#top">Back to top ↑</a></p>
 
 ## Development Roadmap
 
@@ -87,6 +112,8 @@ A web interface may be added later. The processing logic should remain independe
 - DMARC aggregate report processing
 - Optional AI-assisted analysis
 
+<p align="right"><a href="#top">Back to top ↑</a></p>
+
 ## Development Principles
 
 This project is also a practical learning exercise. The implementation should therefore remain understandable, testable and maintainable.
@@ -101,6 +128,8 @@ The following principles guide development:
 - Keep sensitive data and credentials outside version control.
 - Never modify or delete original emails during import.
 - Keep final job evaluation and application decisions under manual control.
+
+<p align="right"><a href="#top">Back to top ↑</a></p>
 
 ## Getting started
 
@@ -156,6 +185,8 @@ from a terminal.
            print(cursor.fetchone())
    finally:
        connection.close()
+
+<p align="right"><a href="#top">Back to top ↑</a></p>
    ```
 
 ## Tests
@@ -178,6 +209,8 @@ The destructive `database/drop-schema.sql` script is not used by tests; execute
 it only when you intentionally want to remove all schema tables and data.
 
 More details: [Database setup](docs/database.md) and [Testing](docs/testing.md).
+
+<p align="right"><a href="#top">Back to top ↑</a></p>
 
 ## E-Mail-Import
 
@@ -204,8 +237,11 @@ python -m python.email_import.cli
 ```
 
 The importer never modifies mailbox data and performs no archive or delete
-actions. See [E-Mail-Import](docs/email-import.md) for Thunderbird storage,
-filtering, migration, and adapter details.
+actions. See [Email import](docs/email-import.en.md) for Thunderbird storage,
+filtering, migration, and adapter details. [Die deutsche Fassung](docs/email-import.md)
+is also available.
+
+<p align="right"><a href="#top">Back to top ↑</a></p>
 
 ## Status
 
@@ -216,6 +252,10 @@ import foundation; downstream job extraction and reporting are not implemented.
 
 Features and architectural decisions may change as development progresses.
 
+<p align="right"><a href="#top">Back to top ↑</a></p>
+
 ## License
 
 License not yet specified.
+
+<p align="right"><a href="#top">Back to top ↑</a></p>

@@ -1,5 +1,7 @@
 # E-Mail-Import
 
+**Sprachen:** [English](email-import.en.md) · Deutsch · [Deutsche README](../README.de.md)
+
 ## Thunderbird-Quelle
 
 Der Import nutzt `MAIL_SOURCE_TYPE=mbox` und `MAIL_SOURCE_PATH` aus `.env`.
@@ -11,11 +13,9 @@ Verzeichnis für Unterordner und wird nicht selbst als Mailbox gelesen. Ein
 IMAP-Ordner ist lokal importierbar, wenn Thunderbird ihn synchronisiert hat.
 Siehe auch die [Mozilla-Hilfe zu lokalen Mail-Verzeichnissen](https://support.mozilla.org/en-US/kb/dangerous-directories-Thunderbird-account-settings).
 
-Der konfigurierte Pfad in diesem Arbeitsstand ist eine MBOX-Datei unter
-`ImapMail/clubitsolutions.de/INBOX`. Die Quelle umfasst 1.734 Nachrichten.
-Zur stabilen Momentaufnahme Thunderbird während eines Imports schließen oder
-eine Profilkopie als Quelle verwenden. Der Adapter öffnet die MBOX nur lesend;
-Mailbox-Dateien und E-Mails werden nicht verändert.
+Für eine stabile Momentaufnahme Thunderbird während eines Imports schließen
+oder eine Profilkopie als Quelle verwenden. Der Adapter öffnet die MBOX nur
+lesend; Mailbox-Dateien und E-Mails werden nicht verändert.
 
 ## Verarbeitung und Filter
 
