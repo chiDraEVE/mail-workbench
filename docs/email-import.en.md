@@ -51,8 +51,18 @@ extractor also stores company, location, and description; additional metadata
 can be added per portal.
 
 `email_processing.processing_status` is then set to `processed`, `no_jobs`,
-`unsupported`, or `error`. Exact matching job URLs are reused; normalizing
-different tracking links is outside this phase.
+`unsupported`, or `error`. A normalized URL is stored in
+`job_publications.normalized_url` for matching. Host casing, default ports,
+fragments, common tracking parameters (`utm_*`, `gclid`, `fbclid`, etc.), and
+query parameter ordering are normalized. Job identifiers and other query
+parameters are retained. The original URL remains in `url`. The schema does
+not enforce uniqueness for normalized URLs; the application looks up existing
+publications when saving candidates.
+
+The MIME parser decodes text and HTML parts using the charset declared for each
+MIME part. The database uses `utf8mb4`. Opening a stored HTML part as a separate
+browser file can still produce different charset detection if the HTML itself
+does not declare a charset.
 
 The importer extracts Message-ID, From, To/Cc/Bcc, Subject, the RFC 5322 date
 as a UTC `DATETIME`, and text and HTML bodies. Text and HTML remain separate

@@ -37,6 +37,7 @@ def _existing_email(cursor, record: EmailRecord):
     return row[0] if row else None
 
 
+# noinspection PyTypeChecker,PyCompatibility
 class EmailImporter:
     """Import only messages from approved sender addresses into MySQL.
 

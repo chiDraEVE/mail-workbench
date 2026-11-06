@@ -54,9 +54,19 @@ Link sind die Mindestfelder. Der Indeed-Extractor übernimmt zusätzlich Firma,
 Ort und Beschreibung; weitere Metadaten können pro Portal ergänzt werden.
 
 `email_processing.processing_status` wechselt danach auf `processed`, `no_jobs`,
-`unsupported` oder `error`. Exakt gleiche Stellen-URLs werden wiederverwendet;
-eine Normalisierung unterschiedlicher Tracking-Links ist noch nicht Teil
-dieser Phase.
+`unsupported` oder `error`. Für die Wiedererkennung wird eine normalisierte URL
+in `job_publications.normalized_url` gespeichert. Vereinheitlicht werden
+Host-Schreibweise, Standardports, Fragmente, übliche Tracking-Parameter
+(`utm_*`, `gclid`, `fbclid` usw.) und die Reihenfolge der Query-Parameter.
+Stellenkennungen und sonstige Query-Parameter bleiben erhalten. Die Original-URL
+steht weiterhin in `url`. Das Schema erzwingt keine Eindeutigkeit der
+normalisierten URL; die Anwendung sucht beim Speichern nach vorhandenen
+Veröffentlichungen.
+
+Der MIME-Parser dekodiert Text- und HTML-Teile anhand des für den jeweiligen
+MIME-Teil angegebenen Zeichensatzes. Die Datenbank verwendet `utf8mb4`. Wird ein
+HTML-Teil separat als Datei im Browser geöffnet, kann dessen Zeichensatz-
+Erkennung abweichen, wenn das HTML selbst keine passende Charset-Angabe enthält.
 
 Extrahiert werden Message-ID, From, To/Cc/Bcc, Subject, der RFC-5322-Date-Wert
 als UTC `DATETIME`, Text und HTML. Bei Multipart-Mails bleiben Text und HTML

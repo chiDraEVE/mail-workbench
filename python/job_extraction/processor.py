@@ -7,6 +7,7 @@ import logging
 from python.email_import.models import EmailRecord
 from .extractors import extractor_for_sender
 from .models import JobCandidate, ProcessingSummary
+from .urls import normalize_job_url
 
 LOGGER = logging.getLogger(__name__)
 
@@ -77,16 +78,35 @@ class EmailJobProcessor:
         cursor = self.connection.cursor()
         try:
             for candidate in candidates:
+                normalized_url = normalize_job_url(candidate.url)
                 cursor.execute(
-                    "SELECT id FROM job_publications WHERE url=%s ORDER BY id LIMIT 1",
-                    (candidate.url,),
+                    """SELECT id FROM job_publications
+                       WHERE normalized_url=%s OR (normalized_url IS NULL AND url=%s)
+                       ORDER BY id LIMIT 1""",
+                    (normalized_url, candidate.url),
                 )
                 existing = cursor.fetchone()
+                if existing is None:
+                    # Backfill old rows when their publication is seen again.
+                    cursor.execute(
+                        """SELECT id, url FROM job_publications
+                           WHERE normalized_url IS NULL ORDER BY id"""
+                    )
+                    existing = next(
+                        (
+                            (publication_id,)
+                            for publication_id, stored_url in cursor.fetchall()
+                            if normalize_job_url(stored_url) == normalized_url
+                        ),
+                        None,
+                    )
                 if existing:
                     publication_id = existing[0]
                     cursor.execute(
-                        "UPDATE job_publications SET last_seen_at=CURRENT_TIMESTAMP WHERE id=%s",
-                        (publication_id,),
+                        """UPDATE job_publications
+                           SET normalized_url=%s, last_seen_at=CURRENT_TIMESTAMP
+                           WHERE id=%s""",
+                        (normalized_url, publication_id),
                     )
                 else:
                     company_id = self._company_id(cursor, candidate.company)
@@ -104,9 +124,12 @@ class EmailJobProcessor:
                     job_id = cursor.lastrowid
                     cursor.execute(
                         """INSERT INTO job_publications
-                           (job_id, platform, url, link_text)
-                           VALUES (%s, %s, %s, %s)""",
-                        (job_id, candidate.platform, candidate.url, candidate.title),
+                           (job_id, platform, url, normalized_url, link_text)
+                           VALUES (%s, %s, %s, %s, %s)""",
+                        (
+                            job_id, candidate.platform, candidate.url,
+                            normalized_url, candidate.title,
+                        ),
                     )
                     publication_id = cursor.lastrowid
                 cursor.execute(
