@@ -25,6 +25,7 @@ reports/
 *.db
 !database/schema.sql
 !database/drop-schema.sql
+!database/clear-data.sql
 !database/migrations/
 !database/migrations/*.sql
 

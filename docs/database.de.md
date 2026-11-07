@@ -56,3 +56,9 @@ Schließe Cursor und Verbindungen nach der Verwendung.
 `database/drop-schema.sql` löscht alle Projekttabellen und deren Inhalte. Das
 Skript ist destruktiv; verwende es nur, wenn du geprüft hast, dass die
 ausgewählte Datenbank die richtige Entwicklungsdatenbank ist.
+
+Wenn du nur die Daten löschen und das Schema behalten möchtest, verwende
+[`../database/clear-data.sql`](../database/clear-data.sql). Das Skript zeigt
+zuerst die ausgewählte Datenbank an und löscht anschließend alle E-Mail-, Job-
+und Firmendaten. Prüfe den Datenbanknamen vor dem Ausführen. Danach ist kein
+erneutes Einspielen von `schema.sql` nötig.

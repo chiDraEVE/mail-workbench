@@ -54,3 +54,9 @@ connections when finished.
 `database/drop-schema.sql` drops all project tables and their contents. It is
 destructive; use it only after confirming the selected database is the intended
 development database.
+
+To delete the data while keeping the schema, use
+[`../database/clear-data.sql`](../database/clear-data.sql). The script first
+prints the selected database name, then deletes all email, job and company data.
+Check the database name before running it. You do not need to apply
+`schema.sql` again afterward.

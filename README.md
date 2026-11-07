@@ -91,18 +91,23 @@ A web interface may be added later. The processing logic should remain independe
 
 ### Phase 3 – Job listing analysis
 
-- [ ] Normalize URLs
-- [ ] Detect duplicate listings
-- [ ] Compare titles, companies and descriptions
-- [ ] Track when listings were first and last observed
-- [ ] Collect availability information
+- [x] Normalize URLs
+- [x] Recognize the same publication by its normalized URL
+- [x] Merge listings with matching title and company
+- [x] Track first and last observation for each publication
+- [ ] Flag listings with missing details for manual review
 
 ### Phase 4 – Reporting
 
-- [ ] Generate HTML reports
-- [ ] Provide direct links to original job advertisements
-- [ ] Highlight potential duplicates and unavailable listings
-- [ ] Support manual classification and review
+- [ ] Generate a manual overview with clickable original links
+- [ ] Filter listings and hide repeated alerts
+- [ ] Support manual review and classification
+
+### Phase 5 – Trello integration and optional enrichment
+
+- [ ] Send manually selected listings to Trello boards
+- [ ] Optionally fetch platform descriptions and compare listings across platforms
+- [ ] Optionally check listing availability
 
 ### Future ideas
 
@@ -248,8 +253,9 @@ Fassung](docs/email-import.md) is also available.
 
 <badge color="warning">Early development</badge>
 
-The project is in early development. Phase 2 provides a local Thunderbird
-import foundation; downstream job extraction and reporting are not implemented.
+The project is in early development. Local Thunderbird import, job extraction,
+URL normalization and basic matching by URL or matching title and company are
+implemented. A manual overview with clickable links remains open.
 
 Features and architectural decisions may change as development progresses.
 

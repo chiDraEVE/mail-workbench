@@ -91,18 +91,23 @@ Eine Weboberfläche kann später hinzukommen. Die Verarbeitungslogik soll unabh�
 
 ### Phase 3 – Analyse von Stellenanzeigen
 
-- [ ] URLs normalisieren
-- [ ] Doppelte Anzeigen erkennen
-- [ ] Titel, Unternehmen und Beschreibungen vergleichen
-- [ ] Erfassen, wann Anzeigen erstmals und zuletzt beobachtet wurden
-- [ ] Verfügbarkeitsinformationen sammeln
+- [x] URLs normalisieren
+- [x] Dieselbe Stellenveröffentlichung über ihre normalisierte URL wiedererkennen
+- [x] Anzeigen mit übereinstimmender Stellenbezeichnung und Company zusammenführen
+- [x] Erste und letzte Beobachtung einer Stellenveröffentlichung erfassen
+- [ ] Anzeigen mit fehlenden Angaben zur manuellen Prüfung markieren
 
 ### Phase 4 – Berichte
 
-- [ ] HTML-Berichte erzeugen
-- [ ] Direkte Links zu Originalanzeigen bereitstellen
-- [ ] Mögliche Duplikate und nicht mehr verfügbare Anzeigen hervorheben
-- [ ] Manuelle Klassifizierung und Prüfung unterstützen
+- [ ] Eine manuelle Übersicht mit klickbaren Original-Links erzeugen
+- [ ] Anzeigen filtern und wiederholte Meldungen ausblenden
+- [ ] Manuelle Prüfung und Klassifizierung unterstützen
+
+### Phase 5 – Trello-Integration und optionale Anreicherung
+
+- [ ] Manuell ausgewählte Anzeigen an Trello-Boards übergeben
+- [ ] Optional Stellenbeschreibungen von Plattformseiten abrufen und plattformübergreifend vergleichen
+- [ ] Optional Verfügbarkeit von Anzeigen prüfen
 
 ### Zukünftige Ideen
 
@@ -223,7 +228,7 @@ Der Import verändert keine Mailboxdaten und archiviert oder löscht keine Nachr
 
 <badge color="warning">Frühe Entwicklung</badge>
 
-Das Projekt befindet sich in einer frühen Entwicklungsphase. Phase 2 bietet eine Grundlage für den lokalen Thunderbird-Import; die anschließende Extraktion von Stellenanzeigen und die Berichterstellung sind noch nicht umgesetzt.
+Das Projekt befindet sich in einer frühen Entwicklungsphase. Der lokale Thunderbird-Import, die Extraktion von Stellenanzeigen, die URL-Normalisierung und ein einfacher Abgleich gleicher URLs sowie gleicher Stellenbezeichnungen und Companies sind umgesetzt. Die manuelle Übersicht mit klickbaren Links ist noch offen.
 
 Funktionen und Architekturentscheidungen können sich im weiteren Entwicklungsverlauf ändern.
 
