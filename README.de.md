@@ -95,13 +95,12 @@ Eine Weboberfläche kann später hinzukommen. Die Verarbeitungslogik soll unabh�
 - [x] Dieselbe Stellenveröffentlichung über ihre normalisierte URL wiedererkennen
 - [x] Anzeigen mit übereinstimmender Stellenbezeichnung und Company zusammenführen
 - [x] Erste und letzte Beobachtung einer Stellenveröffentlichung erfassen
-- [ ] Anzeigen mit fehlenden Angaben zur manuellen Prüfung markieren
 
 ### Phase 4 – Berichte
 
-- [ ] Eine manuelle Übersicht mit klickbaren Original-Links erzeugen
-- [ ] Anzeigen filtern und wiederholte Meldungen ausblenden
-- [ ] Manuelle Prüfung und Klassifizierung unterstützen
+- [ ] Eine Datenbank-Übersicht mit einer Zeile pro Job und klickbaren Anzeigen-Links erzeugen
+- [ ] Betreff und Datum der zugehörigen E-Mails als Kontext anzeigen
+- [ ] Übersicht sortieren und filtern, damit Anzeigen manuell geprüft werden können
 
 ### Phase 5 – Trello-Integration und optionale Anreicherung
 
@@ -228,7 +227,7 @@ Der Import verändert keine Mailboxdaten und archiviert oder löscht keine Nachr
 
 <badge color="warning">Frühe Entwicklung</badge>
 
-Das Projekt befindet sich in einer frühen Entwicklungsphase. Der lokale Thunderbird-Import, die Extraktion von Stellenanzeigen, die URL-Normalisierung und ein einfacher Abgleich gleicher URLs sowie gleicher Stellenbezeichnungen und Companies sind umgesetzt. Die manuelle Übersicht mit klickbaren Links ist noch offen.
+Das Projekt befindet sich in einer frühen Entwicklungsphase. Der lokale Thunderbird-Import, die Extraktion von Stellenanzeigen, die URL-Normalisierung und ein einfacher Abgleich gleicher URLs sowie gleicher Stellenbezeichnungen und Companies sind umgesetzt. Als Nächstes ist eine Datenbank-Übersicht mit klickbaren Anzeigen-Links geplant. Die Verknüpfung zu den Ursprungs-E-Mails ist bereits in der Datenbank vorhanden.
 
 Funktionen und Architekturentscheidungen können sich im weiteren Entwicklungsverlauf ändern.
 

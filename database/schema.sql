@@ -1,6 +1,6 @@
 
 -- Mail Workbench
--- Initial database schema: v1
+-- Current schema (includes changes from migrations 002 and 003).
 -- Execute this script in the mail-workbench database.
 
 CREATE TABLE companies (
@@ -165,4 +165,26 @@ CREATE TABLE email_observations (
 
                                     UNIQUE KEY uq_email_publication (email_id, publication_id),
                                     INDEX idx_email_observations_publication (publication_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+CREATE TABLE job_description_snapshots (
+                                         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                                         publication_id BIGINT UNSIGNED NOT NULL,
+                                         first_seen_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                         last_seen_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                         title VARCHAR(500) NULL,
+                                         company_name VARCHAR(255) NULL,
+                                         location VARCHAR(500) NULL,
+                                         work_mode VARCHAR(30) NOT NULL DEFAULT 'unknown',
+                                         description_text LONGTEXT NOT NULL,
+                                         content_hash CHAR(64) NOT NULL,
+
+                                         CONSTRAINT fk_job_description_snapshots_publication
+                                             FOREIGN KEY (publication_id) REFERENCES job_publications(id)
+                                                 ON DELETE CASCADE,
+
+                                         UNIQUE KEY uq_job_description_snapshot_content
+                                             (publication_id, content_hash),
+                                         INDEX idx_job_description_snapshots_last_seen (last_seen_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

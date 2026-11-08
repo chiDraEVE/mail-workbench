@@ -95,13 +95,12 @@ A web interface may be added later. The processing logic should remain independe
 - [x] Recognize the same publication by its normalized URL
 - [x] Merge listings with matching title and company
 - [x] Track first and last observation for each publication
-- [ ] Flag listings with missing details for manual review
 
 ### Phase 4 – Reporting
 
-- [ ] Generate a manual overview with clickable original links
-- [ ] Filter listings and hide repeated alerts
-- [ ] Support manual review and classification
+- [ ] Generate a database overview with one row per job and clickable listing links
+- [ ] Show the subject and date of related emails as context
+- [ ] Add sorting and filters for manual review
 
 ### Phase 5 – Trello integration and optional enrichment
 
@@ -255,7 +254,8 @@ Fassung](docs/email-import.md) is also available.
 
 The project is in early development. Local Thunderbird import, job extraction,
 URL normalization and basic matching by URL or matching title and company are
-implemented. A manual overview with clickable links remains open.
+implemented. Next is a database overview with clickable job links. Links
+between listings and their source emails are already stored in the database.
 
 Features and architectural decisions may change as development progresses.
 
