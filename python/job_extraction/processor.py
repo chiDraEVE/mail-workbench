@@ -100,13 +100,13 @@ class EmailJobProcessor:
                 if existing is None:
                     # Backfill old rows when their publication is seen again.
                     cursor.execute(
-                        """SELECT id, url FROM job_publications
+                        """SELECT id, job_id, url FROM job_publications
                            WHERE normalized_url IS NULL ORDER BY id"""
                     )
                     existing = next(
                         (
-                            (publication_id, None)
-                            for publication_id, stored_url in cursor.fetchall()
+                            (publication_id, job_id)
+                            for publication_id, job_id, stored_url in cursor.fetchall()
                             if normalize_job_url(stored_url) == normalized_url
                         ),
                         None,

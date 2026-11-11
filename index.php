@@ -47,6 +47,17 @@ $publicationsByJob = [];
 $totalJobs = 0;
 $pageNumber = filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT);
 $pageNumber = max(1, $pageNumber === false || $pageNumber === null ? 1 : $pageNumber);
+$sort = $_GET['sort'] ?? 'recent';
+$sort = is_string($sort) ? $sort : 'recent';
+$sortOrders = [
+    'recent' => 'MAX(p.last_seen_at) DESC, j.id DESC',
+    'oldest' => 'MAX(p.last_seen_at) ASC, j.id ASC',
+    'title' => 'j.title ASC, j.id DESC',
+    'company' => 'COALESCE(c.name, \'\') ASC, j.title ASC, j.id DESC',
+];
+if (!array_key_exists($sort, $sortOrders)) {
+    $sort = 'recent';
+}
 $pageSize = 50;
 $pageCount = 1;
 
@@ -83,9 +94,10 @@ if ($missingSettings !== []) {
         LEFT JOIN companies AS c ON c.id=j.employer_company_id
         LEFT JOIN job_publications AS p ON p.job_id=j.id
         GROUP BY j.id, j.title, c.name, j.location, j.work_mode
-        ORDER BY MAX(p.last_seen_at) DESC, j.id DESC
+        ORDER BY __ORDER_BY__
         LIMIT :limit OFFSET :offset
         SQL;
+        $jobsSql = str_replace('__ORDER_BY__', $sortOrders[$sort], $jobsSql);
         $jobsStatement = $connection->prepare($jobsSql);
         $jobsStatement->bindValue(':limit', $pageSize, PDO::PARAM_INT);
         $jobsStatement->bindValue(':offset', $offset, PDO::PARAM_INT);
@@ -153,6 +165,7 @@ function escape(string $value): string
         .publication { margin-top: .75rem; }
         .publication-meta { font-size: .9rem; }
         nav, .pagination { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1.5rem; }
+        .sort-form { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
         .pagination { justify-content: space-between; }
     </style>
 </head>
@@ -176,6 +189,16 @@ function escape(string $value): string
             <section aria-labelledby="jobs-heading">
                 <h2 id="jobs-heading">Stellenanzeigen</h2>
                 <p><?= number_format($totalJobs, 0, ',', '.') ?> Jobs in der Datenbank</p>
+                <form class="sort-form" method="get">
+                    <label for="sort">Sortieren nach</label>
+                    <select id="sort" name="sort">
+                        <option value="recent" <?= $sort === 'recent' ? 'selected' : '' ?>>Neueste zuerst</option>
+                        <option value="oldest" <?= $sort === 'oldest' ? 'selected' : '' ?>>Älteste zuerst</option>
+                        <option value="title" <?= $sort === 'title' ? 'selected' : '' ?>>Titel A–Z</option>
+                        <option value="company" <?= $sort === 'company' ? 'selected' : '' ?>>Company A–Z</option>
+                    </select>
+                    <button type="submit">Sortieren</button>
+                </form>
 
                 <?php if ($jobs === []): ?>
                     <p>Noch keine Jobs vorhanden.</p>
@@ -191,7 +214,8 @@ function escape(string $value): string
                             <p class="job-meta">
                                 Beobachtet: <?= escape($job['first_seen_at'] ?: 'unbekannt') ?>
                                 bis <?= escape($job['last_seen_at'] ?: 'unbekannt') ?>
-                                · <?= (int) $job['publication_count'] ?> Veröffentlichungen
+                                · <?= (int) $job['publication_count'] ?>
+                                <?= (int) $job['publication_count'] === 1 ? 'Anzeigen-Link' : 'Anzeigen-Links' ?>
                             </p>
 
                             <?php foreach ($publicationsByJob[(int) $job['id']] ?? [] as $publication): ?>
@@ -199,11 +223,13 @@ function escape(string $value): string
                                 $urlParts = parse_url($publication['url']);
                                 $safeUrl = is_array($urlParts)
                                     && in_array(strtolower($urlParts['scheme'] ?? ''), ['http', 'https'], true);
+                                $emailCount = (int) $publication['email_count'];
                                 ?>
                                 <div class="publication">
                                     <?php if ($safeUrl): ?>
-                                        <a href="<?= escape($publication['url']) ?>" target="_blank" rel="noopener noreferrer">
-                                            <?= escape($publication['platform']) ?> – Stellenanzeige öffnen
+                                        <a href="<?= escape($publication['url']) ?>" target="_blank" rel="noopener noreferrer"
+                                           aria-label="<?= escape($publication['platform']) ?>: Stellenanzeige öffnen">
+                                            <?= escape($publication['platform']) ?> ↗
                                         </a>
                                     <?php else: ?>
                                         <span><?= escape($publication['platform']) ?> – ungültiger Link</span>
@@ -214,10 +240,12 @@ function escape(string $value): string
                                             <?php if ($publication['latest_email_subject']): ?>
                                                 · <?= escape($publication['latest_email_subject']) ?>
                                             <?php endif; ?>
+                                            <?php if ($emailCount > 1): ?>
+                                                · In <?= $emailCount ?> E-Mails erhalten
+                                            <?php endif; ?>
                                         <?php else: ?>
                                             Keine verknüpfte E-Mail
                                         <?php endif; ?>
-                                        · <?= (int) $publication['email_count'] ?> Meldungen
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -227,13 +255,13 @@ function escape(string $value): string
                     <?php if ($pageCount > 1): ?>
                         <nav class="pagination" aria-label="Seitennavigation">
                             <?php if ($pageNumber > 1): ?>
-                                <a href="?page=<?= $pageNumber - 1 ?>">← Neuere Jobs</a>
+                                <a href="?page=<?= $pageNumber - 1 ?>&amp;sort=<?= escape($sort) ?>">← Vorherige Seite</a>
                             <?php else: ?>
                                 <span></span>
                             <?php endif; ?>
                             <span>Seite <?= $pageNumber ?> von <?= $pageCount ?></span>
                             <?php if ($pageNumber < $pageCount): ?>
-                                <a href="?page=<?= $pageNumber + 1 ?>">Ältere Jobs →</a>
+                                <a href="?page=<?= $pageNumber + 1 ?>&amp;sort=<?= escape($sort) ?>">Nächste Seite →</a>
                             <?php endif; ?>
                         </nav>
                     <?php endif; ?>

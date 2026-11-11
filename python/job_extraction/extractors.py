@@ -171,7 +171,68 @@ class LinkedInExtractor(JobExtractor):
                 if "/jobs/view/" in path or "/comm/jobs/view/" in path:
                     anchors.append(anchor)
         for anchor in anchors:
-            yield _candidate(anchor, self.platform)
+            company, location = _linkedin_company_and_location(anchor)
+            yield _candidate(
+                anchor, self.platform, company=company, location=location,
+            )
+
+
+_LINKEDIN_DETAIL_LABELS = {
+    "easy apply", "bewerben", "apply", "promoted", "gesponsert", "reposted",
+    "actively recruiting", "hybrid", "remote", "on-site", "onsite", "vor ort",
+    "full-time", "part-time", "contract", "temporary", "internship",
+    "save", "follow", "view job", "job ansehen", "learn more", "mehr erfahren",
+}
+
+
+def _linkedin_company_and_location(anchor: Tag) -> tuple[str | None, str | None]:
+    """Read the company and location from lines following a job title.
+
+    LinkedIn alert templates often put title, company and location on separate
+    text lines without class names. Walk outward from the link and use the
+    smallest ancestor that contains all three lines.
+    """
+    title_tokens = re.findall(r"[\w]+", anchor.get_text(" ", strip=True).casefold())
+    if not title_tokens:
+        return None, None
+
+    company_only = None
+    for container in anchor.parents:
+        if container.name in {"body", "html", "[document]"}:
+            break
+        lines = [
+            " ".join(line.split())
+            for line in container.get_text("\n", strip=True).splitlines()
+            if line.strip()
+        ]
+        title_end = None
+        for start in range(len(lines)):
+            collected: list[str] = []
+            for end in range(start, min(start + 8, len(lines))):
+                collected.extend(re.findall(r"[\w]+", lines[end].casefold()))
+                if collected == title_tokens:
+                    title_end = end
+                    break
+                if len(collected) >= len(title_tokens) or collected != title_tokens[:len(collected)]:
+                    break
+            if title_end is not None:
+                break
+        if title_end is None:
+            continue
+
+        details: list[str] = []
+        for line in lines[title_end + 1:]:
+            normalized = line.casefold().strip(" ·|•")
+            if normalized in _LINKEDIN_DETAIL_LABELS:
+                continue
+            if normalized.startswith(("posted ", "vor ")):
+                continue
+            details.append(line)
+            if len(details) == 2:
+                return details[0][:255], details[1][:255]
+        if details and company_only is None:
+            company_only = details[0][:255]
+    return company_only, None
 
 
 class XingExtractor(JobExtractor):
