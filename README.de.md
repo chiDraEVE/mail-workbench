@@ -14,10 +14,11 @@
 - [Erste Schritte](#erste-schritte)
 - [Tests](#tests)
 - [E-Mail-Import](#e-mail-import)
+- [Trello-Integration](#trello-integration)
 - [Status](#status)
 - [Lizenz](#lizenz)
 
-**Dokumentation:** [Datenbank einrichten](docs/database.de.md) · [Tests](docs/testing.de.md) · [E-Mail-Import](docs/email-import.md)
+**Dokumentation:** [Datenbank einrichten](docs/database.de.md) · [Database setup (EN)](docs/database.md) · [Tests](docs/testing.de.md) · [Testing (EN)](docs/testing.md) · [E-Mail-Import](docs/email-import.md) · [Email import (EN)](docs/email-import.en.md) · [Trello-Integration](docs/trello-integration.de.md) · [Trello integration (EN)](docs/trello-integration.md)
 
 Ein lokales, modular aufgebautes Automatisierungsprojekt zur Verarbeitung von E-Mails und zum Extrahieren nützlicher Informationen aus verschiedenen Quellen.
 
@@ -61,11 +62,11 @@ Die erste Architektur basiert auf diesen Komponenten:
 |---|---|
 | E-Mail-Verarbeitung | Python |
 | Datenbank | MySQL |
-| Berichte | HTML |
+| Berichte | PHP / HTML |
 | Versionsverwaltung | Git |
 | Entwicklungsumgebung | Ubuntu 24.04 / IntelliJ IDEA |
 
-Eine Weboberfläche kann später hinzukommen. Die Verarbeitungslogik soll unabhängig von der Darstellung bleiben.
+Die aktuelle lokale PHP-Seite zeigt gespeicherte Jobs an und ermöglicht manuelle Korrekturen. Die Verarbeitungslogik bleibt unabhängig von der Darstellung.
 
 <p align="right"><a href="#top">Nach oben ↑</a></p>
 
@@ -98,13 +99,15 @@ Eine Weboberfläche kann später hinzukommen. Die Verarbeitungslogik soll unabh�
 
 ### Phase 4 – Berichte
 
-- [ ] Eine Datenbank-Übersicht mit einer Zeile pro Job und klickbaren Anzeigen-Links erzeugen
-- [ ] Betreff und Datum der zugehörigen E-Mails als Kontext anzeigen
-- [ ] Übersicht sortieren und filtern, damit Anzeigen manuell geprüft werden können
+- [x] Eine Datenbank-Übersicht mit einem Eintrag pro Job und klickbaren Anzeigen-Links erzeugen
+- [x] Betreff und Datum der zugehörigen E-Mails als Kontext anzeigen
+- [x] Sortierung sowie Plattform- und Zeitfilter für die manuelle Prüfung ergänzen
+- [x] Stellenbezeichnung, Unternehmen, Ort und Arbeitsmodell manuell bearbeiten können
 
 ### Phase 5 – Trello-Integration und optionale Anreicherung
 
 - [ ] Manuell ausgewählte Anzeigen an Trello-Boards übergeben
+- [ ] Trello-Zugangsdaten und Ziel-Board/-Liste außerhalb der Versionsverwaltung konfigurieren
 - [ ] Optional Stellenbeschreibungen von Plattformseiten abrufen und plattformübergreifend vergleichen
 - [ ] Optional Verfügbarkeit von Anzeigen prüfen
 
@@ -115,6 +118,16 @@ Eine Weboberfläche kann später hinzukommen. Die Verarbeitungslogik soll unabh�
 - Verarbeitung von NinjaFirewall-Berichten
 - Verarbeitung von DMARC-Aggregatberichten
 - Optionale KI-gestützte Analyse
+
+<p align="right"><a href="#top">Nach oben ↑</a></p>
+
+## Trello-Integration
+
+In Phase 5 sollen in der Übersicht ausgewählte Stellenanzeigen an Trello
+übergeben werden. Die Anleitung beschreibt die API-Zugangsdaten, ihre
+Erstellung, die relevanten Endpunkte und die geplante lokale Konfiguration:
+[Trello-Integration](docs/trello-integration.de.md). Die [englische Fassung](docs/trello-integration.md)
+ist ebenfalls verfügbar.
 
 <p align="right"><a href="#top">Nach oben ↑</a></p>
 
@@ -227,7 +240,7 @@ Der Import verändert keine Mailboxdaten und archiviert oder löscht keine Nachr
 
 <badge color="warning">Frühe Entwicklung</badge>
 
-Das Projekt befindet sich in einer frühen Entwicklungsphase. Der lokale Thunderbird-Import, die Extraktion von Stellenanzeigen, die URL-Normalisierung und ein einfacher Abgleich gleicher URLs sowie gleicher Stellenbezeichnungen und Companies sind umgesetzt. Als Nächstes ist eine Datenbank-Übersicht mit klickbaren Anzeigen-Links geplant. Die Verknüpfung zu den Ursprungs-E-Mails ist bereits in der Datenbank vorhanden.
+Das Projekt befindet sich in einer frühen Entwicklungsphase. Der lokale Thunderbird-Import, die Extraktion von Stellenanzeigen, die URL-Normalisierung, ein einfacher Abgleich gleicher URLs beziehungsweise gleicher Stellenbezeichnungen und Unternehmen sowie eine PHP-Übersicht mit klickbaren Links, Filtern und manueller Bearbeitung sind umgesetzt. Als Nächstes folgt die Trello-Integration. Die Verknüpfung zu den Ursprungs-E-Mails ist in der Datenbank vorhanden.
 
 Funktionen und Architekturentscheidungen können sich im weiteren Entwicklungsverlauf ändern.
 

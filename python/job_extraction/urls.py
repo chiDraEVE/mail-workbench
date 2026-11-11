@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+from urllib.parse import parse_qsl, unquote, urlencode, urlsplit, urlunsplit
 
 
 _TRACKING_PARAMETERS = {
@@ -11,6 +11,10 @@ _TRACKING_PARAMETERS = {
     "mc_cid", "mc_eid", "ref", "referrer",
 }
 _PERCENT_ESCAPE = re.compile(r"%([0-9a-fA-F]{2})")
+_EXTERNAL_ID_KEYS = {
+    "jk", "jobid", "job_id", "job-id", "postingid", "posting_id",
+    "vacancyid", "vacancy_id", "id",
+}
 _UNRESERVED = frozenset(
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
 )
@@ -59,3 +63,22 @@ def normalize_job_url(url: str) -> str:
     query_items.sort(key=lambda item: (item[0].casefold(), item[1]))
     query = urlencode(query_items, doseq=True)
     return urlunsplit((scheme, hostname, path, query, ""))
+
+
+def external_job_id(url: str) -> str | None:
+    """Derive a likely platform listing ID from a URL.
+
+    Prefer known query parameters (including Indeed's ``jk``); when none is
+    present, use the last non-empty path segment.
+    """
+    try:
+        parts = urlsplit(url.strip())
+        for key, value in parse_qsl(parts.query, keep_blank_values=True):
+            if key.casefold() in _EXTERNAL_ID_KEYS and value.strip():
+                return unquote(value).strip()[:255]
+        segments = [segment for segment in parts.path.split("/") if segment]
+        if segments:
+            return unquote(segments[-1]).strip()[:255] or None
+    except (ValueError, UnicodeError):
+        return None
+    return None

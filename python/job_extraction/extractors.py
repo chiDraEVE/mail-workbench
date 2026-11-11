@@ -128,7 +128,9 @@ class ArbeitsagenturExtractor(JobExtractor):
         for heading in soup.find_all(["h2", "h3"]):
             anchor = heading.find("a", href=True)
             if anchor:
-                yield _candidate(anchor, self.platform, title=heading.get_text(" ", strip=True))
+                title = heading.get_text(" ", strip=True)
+                company, location = _company_and_location_after_title(anchor, title)
+                yield _candidate(anchor, self.platform, title=title, company=company, location=location)
 
 
 class IndeedExtractor(JobExtractor):
@@ -171,7 +173,7 @@ class LinkedInExtractor(JobExtractor):
                 if "/jobs/view/" in path or "/comm/jobs/view/" in path:
                     anchors.append(anchor)
         for anchor in anchors:
-            company, location = _linkedin_company_and_location(anchor)
+            company, location = _company_and_location_after_title(anchor)
             yield _candidate(
                 anchor, self.platform, company=company, location=location,
             )
@@ -185,14 +187,14 @@ _LINKEDIN_DETAIL_LABELS = {
 }
 
 
-def _linkedin_company_and_location(anchor: Tag) -> tuple[str | None, str | None]:
+def _company_and_location_after_title(anchor: Tag, title: str | None = None) -> tuple[str | None, str | None]:
     """Read the company and location from lines following a job title.
 
     LinkedIn alert templates often put title, company and location on separate
     text lines without class names. Walk outward from the link and use the
     smallest ancestor that contains all three lines.
     """
-    title_tokens = re.findall(r"[\w]+", anchor.get_text(" ", strip=True).casefold())
+    title_tokens = re.findall(r"[\w]+", (title or anchor.get_text(" ", strip=True)).casefold())
     if not title_tokens:
         return None, None
 
@@ -223,9 +225,12 @@ def _linkedin_company_and_location(anchor: Tag) -> tuple[str | None, str | None]
         details: list[str] = []
         for line in lines[title_end + 1:]:
             normalized = line.casefold().strip(" ·|•")
-            if normalized in _LINKEDIN_DETAIL_LABELS:
+            if normalized in _LINKEDIN_DETAIL_LABELS | _GENERIC_LINK_LABELS:
                 continue
             if normalized.startswith(("posted ", "vor ")):
+                continue
+            # Don't let a neighboring recommendation become a company or city.
+            if re.search(r"\b(engineer|developer|entwickler|entwicklerin|architect|architekt|manager|analyst|designer)\b", normalized):
                 continue
             details.append(line)
             if len(details) == 2:
@@ -253,7 +258,8 @@ class XingExtractor(JobExtractor):
         for anchor in anchors:
             title_node = anchor.select_one("span.DarkmodePetrolLink")
             title = title_node.get_text(" ", strip=True) if title_node else None
-            yield _candidate(anchor, self.platform, title=title)
+            company, location = _company_and_location_after_title(anchor, title)
+            yield _candidate(anchor, self.platform, title=title, company=company, location=location)
 
 
 class StepstoneExtractor(JobExtractor):
@@ -284,7 +290,8 @@ class StepstoneExtractor(JobExtractor):
             None,
         )
         if cta and title:
-            yield _candidate(cta, self.platform, title=title)
+            company, location = _company_and_location_after_title(cta, title)
+            yield _candidate(cta, self.platform, title=title, company=company, location=location)
 
 
 class InstaffoExtractor(JobExtractor):
@@ -299,7 +306,8 @@ class InstaffoExtractor(JobExtractor):
             if "/candidate/job/" in decoded or "candidate%2fjob" in decoded:
                 continue
             if re.search(r"/(?:jobs?|stellenangebote?)/", path):
-                yield _candidate(anchor, self.platform)
+                company, location = _company_and_location_after_title(anchor)
+                yield _candidate(anchor, self.platform, company=company, location=location)
 
 
 class StellenanzeigenExtractor(JobExtractor):
@@ -309,7 +317,8 @@ class StellenanzeigenExtractor(JobExtractor):
         for anchor in soup.find_all("a", href=True):
             path = urlsplit(str(anchor.get("href", ""))).path.lower()
             if re.search(r"/(?:job|jobs|stellenangebot|stellenangebote)/", path):
-                yield _candidate(anchor, self.platform)
+                company, location = _company_and_location_after_title(anchor)
+                yield _candidate(anchor, self.platform, company=company, location=location)
 
 
 class WorkwiseExtractor(JobExtractor):
@@ -319,7 +328,8 @@ class WorkwiseExtractor(JobExtractor):
         for anchor in soup.find_all("a", href=True):
             path = urlsplit(str(anchor.get("href", ""))).path.lower()
             if re.search(r"/(?:jobs?|stellenangebote?)/", path):
-                yield _candidate(anchor, self.platform)
+                company, location = _company_and_location_after_title(anchor)
+                yield _candidate(anchor, self.platform, company=company, location=location)
 
 
 _EXTRACTORS: tuple[tuple[str, JobExtractor], ...] = (

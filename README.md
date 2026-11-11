@@ -14,10 +14,11 @@
 - [Getting started](#getting-started)
 - [Tests](#tests)
 - [Email import](#e-mail-import)
+- [Trello integration](#trello-integration)
 - [Status](#status)
 - [License](#license)
 
-**Documentation:** [Database setup (EN)](docs/database.md) · [Datenbank einrichten (DE)](docs/database.de.md) · [Testing (EN)](docs/testing.md) · [Tests (DE)](docs/testing.de.md) · [Email import (EN)](docs/email-import.en.md) · [E-Mail-Import (DE)](docs/email-import.md)
+**Documentation:** [Database setup (EN)](docs/database.md) · [Datenbank einrichten (DE)](docs/database.de.md) · [Testing (EN)](docs/testing.md) · [Tests (DE)](docs/testing.de.md) · [Email import (EN)](docs/email-import.en.md) · [E-Mail-Import (DE)](docs/email-import.md) · [Trello integration (EN)](docs/trello-integration.md) · [Trello-Integration (DE)](docs/trello-integration.de.md)
 
 A local, modular automation project for processing emails and extracting useful information from different sources.
 
@@ -61,11 +62,11 @@ The initial architecture is based on the following components:
 |-------------------------|------------------------------|
 | Email processing        | Python                       |
 | Database                | MySQL                        |
-| Reporting               | HTML                         |
+| Reporting               | PHP / HTML                   |
 | Version control         | Git                          |
 | Development environment | Ubuntu 24.04 / IntelliJ IDEA |
 
-A web interface may be added later. The processing logic should remain independent of the presentation layer.
+The current local PHP page reports stored jobs and supports manual corrections. The processing logic remains independent of the presentation layer.
 
 <p align="right"><a href="#top">Back to top ↑</a></p>
 
@@ -98,13 +99,15 @@ A web interface may be added later. The processing logic should remain independe
 
 ### Phase 4 – Reporting
 
-- [ ] Generate a database overview with one row per job and clickable listing links
-- [ ] Show the subject and date of related emails as context
-- [ ] Add sorting and filters for manual review
+- [x] Generate a database overview with one entry per job and clickable listing links
+- [x] Show the subject and date of related emails as context
+- [x] Add sorting and platform/time filters for manual review
+- [x] Allow manual editing of title, company, location and work mode
 
 ### Phase 5 – Trello integration and optional enrichment
 
 - [ ] Send manually selected listings to Trello boards
+- [ ] Configure Trello credentials and target board/list outside version control
 - [ ] Optionally fetch platform descriptions and compare listings across platforms
 - [ ] Optionally check listing availability
 
@@ -115,6 +118,15 @@ A web interface may be added later. The processing logic should remain independe
 - NinjaFirewall report processing
 - DMARC aggregate report processing
 - Optional AI-assisted analysis
+
+<p align="right"><a href="#top">Back to top ↑</a></p>
+
+## Trello integration
+
+Phase 5 will send listings selected in the reporting page to Trello. The API
+credentials, token creation steps, relevant endpoints and planned local
+configuration are described in the [Trello integration guide](docs/trello-integration.md).
+The [German guide](docs/trello-integration.de.md) is also available.
 
 <p align="right"><a href="#top">Back to top ↑</a></p>
 
@@ -253,9 +265,10 @@ Fassung](docs/email-import.md) is also available.
 <badge color="warning">Early development</badge>
 
 The project is in early development. Local Thunderbird import, job extraction,
-URL normalization and basic matching by URL or matching title and company are
-implemented. Next is a database overview with clickable job links. Links
-between listings and their source emails are already stored in the database.
+URL normalization, basic matching by URL or matching title and company, and a
+PHP reporting page with clickable links, filters and manual editing are
+implemented. The next phase is Trello integration. Links between listings and
+their source emails are stored in the database.
 
 Features and architectural decisions may change as development progresses.
 

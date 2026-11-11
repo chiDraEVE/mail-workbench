@@ -51,6 +51,20 @@ finally:
 does not log or include credential values in errors. Close both cursors and
 connections when finished.
 
+## Local job overview
+
+The project-root `index.php` uses the same `DB_HOST`, `DB_PORT`, `DB_NAME`,
+`DB_USER` and `DB_PASSWORD` settings. Apache environment variables take
+precedence; PHP can fall back to `.env` only when the web-server user can read
+that file. The overview displays jobs and their source links, supports sorting
+and platform/time filters, and lets you manually correct a job's title,
+company, location and work mode. Those corrections update the existing rows in
+`jobs` and `companies`.
+
+Listing-specific URLs, platforms and external IDs are stored in
+`job_publications`. The external ID is derived from a known URL query parameter
+(such as Indeed's `jk`) or the last path component when an email is processed.
+
 `database/drop-schema.sql` drops all project tables and their contents. It is
 destructive; use it only after confirming the selected database is the intended
 development database.

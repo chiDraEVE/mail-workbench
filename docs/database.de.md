@@ -53,6 +53,22 @@ finally:
 Zugangsdaten werden weder protokolliert noch in Fehlermeldungen ausgegeben.
 Schließe Cursor und Verbindungen nach der Verwendung.
 
+## Lokale Job-Übersicht
+
+Die `index.php` im Projektverzeichnis verwendet dieselben Einstellungen
+`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER` und `DB_PASSWORD`. Von Apache
+gesetzte Umgebungsvariablen haben Vorrang. PHP kann `.env` nur als Ersatz
+verwenden, wenn der Webserver-Benutzer die Datei lesen darf. Die Übersicht
+zeigt Jobs und ihre Ursprungslinks, bietet Sortierung sowie Plattform- und
+Zeitfilter und ermöglicht manuelle Korrekturen an Titel, Unternehmen, Ort und
+Arbeitsmodell. Diese Änderungen aktualisieren die vorhandenen Zeilen in
+`jobs` und `companies`.
+
+Anzeigenspezifische URLs, Plattformen und externe IDs liegen in
+`job_publications`. Die externe ID wird beim Verarbeiten einer E-Mail aus einem
+bekannten URL-Parameter (bei Indeed zum Beispiel `jk`) oder, falls keiner
+vorhanden ist, aus dem letzten URL-Pfadbestandteil abgeleitet.
+
 `database/drop-schema.sql` löscht alle Projekttabellen und deren Inhalte. Das
 Skript ist destruktiv; verwende es nur, wenn du geprüft hast, dass die
 ausgewählte Datenbank die richtige Entwicklungsdatenbank ist.

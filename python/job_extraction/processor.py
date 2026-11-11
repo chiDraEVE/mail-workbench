@@ -9,7 +9,7 @@ import unicodedata
 from python.email_import.models import EmailRecord
 from .extractors import extractor_for_sender
 from .models import JobCandidate, ProcessingSummary
-from .urls import normalize_job_url
+from .urls import external_job_id, normalize_job_url
 
 LOGGER = logging.getLogger(__name__)
 
@@ -117,9 +117,11 @@ class EmailJobProcessor:
                     company_id = self._company_id(cursor, candidate.company)
                     cursor.execute(
                         """UPDATE job_publications
-                           SET normalized_url=%s, last_seen_at=CURRENT_TIMESTAMP
+                           SET normalized_url=%s,
+                               external_id=COALESCE(external_id, %s),
+                               last_seen_at=CURRENT_TIMESTAMP
                            WHERE id=%s""",
-                        (normalized_url, publication_id),
+                        (normalized_url, external_job_id(candidate.url), publication_id),
                     )
                     if job_id is not None:
                         cursor.execute(
@@ -164,11 +166,11 @@ class EmailJobProcessor:
                         )
                     cursor.execute(
                         """INSERT INTO job_publications
-                           (job_id, platform, url, normalized_url, link_text)
-                           VALUES (%s, %s, %s, %s, %s)""",
+                           (job_id, platform, external_id, url, normalized_url, link_text)
+                           VALUES (%s, %s, %s, %s, %s, %s)""",
                         (
-                            job_id, candidate.platform, candidate.url,
-                            normalized_url, candidate.title,
+                            job_id, candidate.platform, external_job_id(candidate.url),
+                            candidate.url, normalized_url, candidate.title,
                         ),
                     )
                     publication_id = cursor.lastrowid

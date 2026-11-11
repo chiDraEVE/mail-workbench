@@ -47,6 +47,10 @@ $publicationsByJob = [];
 $totalJobs = 0;
 $pageNumber = filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT);
 $pageNumber = max(1, $pageNumber === false || $pageNumber === null ? 1 : $pageNumber);
+$platform = $_GET['platform'] ?? '';
+$platform = is_string($platform) ? $platform : '';
+$period = $_GET['period'] ?? 'all';
+$period = is_string($period) && in_array($period, ['all', '1', '3', '6'], true) ? $period : 'all';
 $sort = $_GET['sort'] ?? 'recent';
 $sort = is_string($sort) ? $sort : 'recent';
 $sortOrders = [
@@ -80,7 +84,59 @@ if ($missingSettings !== []) {
         $connection->query('SELECT 1');
         $databaseConnected = true;
 
-        $totalJobs = (int) $connection->query('SELECT COUNT(*) FROM jobs')->fetchColumn();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_job') {
+            $jobId = filter_input(INPUT_POST, 'job_id', FILTER_VALIDATE_INT);
+            $title = trim((string) ($_POST['title'] ?? ''));
+            $companyName = trim((string) ($_POST['company'] ?? ''));
+            $location = trim((string) ($_POST['location'] ?? ''));
+            $workMode = trim((string) ($_POST['work_mode'] ?? ''));
+            if (!$jobId || $title === '') {
+                throw new RuntimeException('Titel und gültige Job-ID werden benötigt.');
+            }
+            $connection->beginTransaction();
+            $companyId = null;
+            if ($companyName !== '') {
+                $normalizedName = function_exists('mb_strtolower')
+                    ? mb_strtolower(preg_replace('/\\s+/', ' ', $companyName))
+                    : strtolower(preg_replace('/\\s+/', ' ', $companyName));
+                $companyLookup = $connection->prepare('SELECT id FROM companies WHERE normalized_name=:name ORDER BY id LIMIT 1');
+                $companyLookup->execute([':name' => $normalizedName]);
+                $companyId = $companyLookup->fetchColumn();
+                if ($companyId === false) {
+                    $insertCompany = $connection->prepare('INSERT INTO companies (name, normalized_name) VALUES (:name, :normalized)');
+                    $insertCompany->execute([':name' => $companyName, ':normalized' => $normalizedName]);
+                    $companyId = (int) $connection->lastInsertId();
+                }
+            }
+            $updateJob = $connection->prepare(
+                'UPDATE jobs SET title=:title, employer_company_id=:company, location=:location, work_mode=:mode WHERE id=:id'
+            );
+            $updateJob->execute([
+                ':title' => $title, ':company' => $companyId,
+                ':location' => $location !== '' ? $location : null,
+                ':mode' => $workMode !== '' ? $workMode : null, ':id' => $jobId,
+            ]);
+            $connection->commit();
+            $query = http_build_query(['sort' => $sort, 'platform' => $platform, 'period' => $period, 'page' => $pageNumber]);
+            header('Location: ?' . $query);
+            exit;
+        }
+
+        $availablePlatforms = $connection->query('SELECT DISTINCT platform FROM job_publications ORDER BY platform')->fetchAll(PDO::FETCH_COLUMN);
+        $where = [];
+        $filterParameters = [];
+        if ($platform !== '') {
+            $where[] = 'EXISTS (SELECT 1 FROM job_publications fp WHERE fp.job_id=j.id AND fp.platform=:platform)';
+            $filterParameters[':platform'] = $platform;
+        }
+        if ($period !== 'all') {
+            $where[] = 'EXISTS (SELECT 1 FROM job_publications fp JOIN email_observations fo ON fo.publication_id=fp.id JOIN email_messages fm ON fm.id=fo.email_id WHERE fp.job_id=j.id AND fm.received_at >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL ' . (int) $period . ' MONTH))';
+        }
+        $whereSql = $where ? ' WHERE ' . implode(' AND ', $where) : '';
+
+        $countStatement = $connection->prepare('SELECT COUNT(*) FROM jobs AS j' . $whereSql);
+        $countStatement->execute($filterParameters);
+        $totalJobs = (int) $countStatement->fetchColumn();
         $pageCount = max(1, (int) ceil($totalJobs / $pageSize));
         $pageNumber = min($pageNumber, $pageCount);
         $offset = ($pageNumber - 1) * $pageSize;
@@ -93,12 +149,16 @@ if ($missingSettings !== []) {
         FROM jobs AS j
         LEFT JOIN companies AS c ON c.id=j.employer_company_id
         LEFT JOIN job_publications AS p ON p.job_id=j.id
+        __WHERE__
         GROUP BY j.id, j.title, c.name, j.location, j.work_mode
         ORDER BY __ORDER_BY__
         LIMIT :limit OFFSET :offset
         SQL;
-        $jobsSql = str_replace('__ORDER_BY__', $sortOrders[$sort], $jobsSql);
+        $jobsSql = str_replace(['__ORDER_BY__', '__WHERE__'], [$sortOrders[$sort], $whereSql], $jobsSql);
         $jobsStatement = $connection->prepare($jobsSql);
+        foreach ($filterParameters as $name => $value) {
+            $jobsStatement->bindValue($name, $value);
+        }
         $jobsStatement->bindValue(':limit', $pageSize, PDO::PARAM_INT);
         $jobsStatement->bindValue(':offset', $offset, PDO::PARAM_INT);
         $jobsStatement->execute();
@@ -114,7 +174,7 @@ if ($missingSettings !== []) {
             }
 
             $publicationStatement = $connection->prepare(
-                'SELECT p.job_id, p.platform, p.url, p.last_seen_at,
+                'SELECT p.job_id, p.platform, p.external_id, p.url, p.last_seen_at,
                         (SELECT COUNT(*) FROM email_observations AS o
                          WHERE o.publication_id=p.id) AS email_count,
                         (SELECT m.subject FROM email_observations AS o
@@ -166,15 +226,16 @@ function escape(string $value): string
         .publication-meta { font-size: .9rem; }
         nav, .pagination { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1.5rem; }
         .sort-form { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+        .edit-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: .65rem; margin-top: 1rem; }
+        .edit-form label { display: grid; gap: .2rem; }
+        input, select, button { font: inherit; padding: .35rem; }
         .pagination { justify-content: space-between; }
     </style>
 </head>
 <body>
     <main>
         <h1>Mail Workbench</h1>
-        <?php if ($databaseConnected): ?>
-            <p class="status">Datenbankverbindung: verfügbar</p>
-        <?php else: ?>
+        <?php if (!$databaseConnected): ?>
             <p class="status" role="status"><?= escape($pageError ?? 'Datenbankverbindung nicht verfügbar.') ?></p>
         <?php endif; ?>
 
@@ -190,6 +251,20 @@ function escape(string $value): string
                 <h2 id="jobs-heading">Stellenanzeigen</h2>
                 <p><?= number_format($totalJobs, 0, ',', '.') ?> Jobs in der Datenbank</p>
                 <form class="sort-form" method="get">
+                    <label for="platform">Plattform</label>
+                    <select id="platform" name="platform">
+                        <option value="">Alle Plattformen</option>
+                        <?php foreach ($availablePlatforms as $availablePlatform): ?>
+                            <option value="<?= escape($availablePlatform) ?>" <?= $platform === $availablePlatform ? 'selected' : '' ?>><?= escape($availablePlatform) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <label for="period">Zeitraum</label>
+                    <select id="period" name="period">
+                        <option value="all" <?= $period === 'all' ? 'selected' : '' ?>>Gesamter Zeitraum</option>
+                        <option value="1" <?= $period === '1' ? 'selected' : '' ?>>Letzter Monat</option>
+                        <option value="3" <?= $period === '3' ? 'selected' : '' ?>>Letzte 3 Monate</option>
+                        <option value="6" <?= $period === '6' ? 'selected' : '' ?>>Letzte 6 Monate</option>
+                    </select>
                     <label for="sort">Sortieren nach</label>
                     <select id="sort" name="sort">
                         <option value="recent" <?= $sort === 'recent' ? 'selected' : '' ?>>Neueste zuerst</option>
@@ -197,7 +272,7 @@ function escape(string $value): string
                         <option value="title" <?= $sort === 'title' ? 'selected' : '' ?>>Titel A–Z</option>
                         <option value="company" <?= $sort === 'company' ? 'selected' : '' ?>>Company A–Z</option>
                     </select>
-                    <button type="submit">Sortieren</button>
+                    <button type="submit">Anwenden</button>
                 </form>
 
                 <?php if ($jobs === []): ?>
@@ -211,6 +286,19 @@ function escape(string $value): string
                                 <?php if ($job['location']): ?> · <?= escape($job['location']) ?><?php endif; ?>
                                 <?php if ($job['work_mode']): ?> · <?= escape($job['work_mode']) ?><?php endif; ?>
                             </p>
+
+                            <details>
+                                <summary>Jobdaten bearbeiten</summary>
+                                <form class="edit-form" method="post">
+                                    <input type="hidden" name="action" value="save_job">
+                                    <input type="hidden" name="job_id" value="<?= (int) $job['id'] ?>">
+                                    <label>Titel<input name="title" maxlength="500" required value="<?= escape($job['title']) ?>"></label>
+                                    <label>Unternehmen<input name="company" maxlength="255" value="<?= escape($job['company_name'] ?? '') ?>"></label>
+                                    <label>Ort<input name="location" maxlength="255" value="<?= escape($job['location'] ?? '') ?>"></label>
+                                    <label>Arbeitsmodell<input name="work_mode" maxlength="50" value="<?= escape($job['work_mode'] ?? '') ?>" placeholder="Remote, Hybrid, Vor Ort"></label>
+                                    <button type="submit">Speichern</button>
+                                </form>
+                            </details>
                             <p class="job-meta">
                                 Beobachtet: <?= escape($job['first_seen_at'] ?: 'unbekannt') ?>
                                 bis <?= escape($job['last_seen_at'] ?: 'unbekannt') ?>
@@ -231,6 +319,9 @@ function escape(string $value): string
                                            aria-label="<?= escape($publication['platform']) ?>: Stellenanzeige öffnen">
                                             <?= escape($publication['platform']) ?> ↗
                                         </a>
+                                        <?php if ($publication['external_id']): ?>
+                                            <span class="publication-meta">· ID <?= escape($publication['external_id']) ?></span>
+                                        <?php endif; ?>
                                     <?php else: ?>
                                         <span><?= escape($publication['platform']) ?> – ungültiger Link</span>
                                     <?php endif; ?>
@@ -255,13 +346,13 @@ function escape(string $value): string
                     <?php if ($pageCount > 1): ?>
                         <nav class="pagination" aria-label="Seitennavigation">
                             <?php if ($pageNumber > 1): ?>
-                                <a href="?page=<?= $pageNumber - 1 ?>&amp;sort=<?= escape($sort) ?>">← Vorherige Seite</a>
+                                <a href="?page=<?= $pageNumber - 1 ?>&amp;sort=<?= escape($sort) ?>&amp;platform=<?= escape($platform) ?>&amp;period=<?= escape($period) ?>">← Vorherige Seite</a>
                             <?php else: ?>
                                 <span></span>
                             <?php endif; ?>
                             <span>Seite <?= $pageNumber ?> von <?= $pageCount ?></span>
                             <?php if ($pageNumber < $pageCount): ?>
-                                <a href="?page=<?= $pageNumber + 1 ?>&amp;sort=<?= escape($sort) ?>">Nächste Seite →</a>
+                                <a href="?page=<?= $pageNumber + 1 ?>&amp;sort=<?= escape($sort) ?>&amp;platform=<?= escape($platform) ?>&amp;period=<?= escape($period) ?>">Nächste Seite →</a>
                             <?php endif; ?>
                         </nav>
                     <?php endif; ?>
