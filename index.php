@@ -32,6 +32,9 @@ $databasePort = $setting('DB_PORT', '3306');
 $databaseName = $setting('DB_NAME');
 $databaseUser = $setting('DB_USER');
 $databasePassword = $setting('DB_PASSWORD');
+$trelloApiKey = $setting('TRELLO_API_KEY');
+$trelloApiToken = $setting('TRELLO_API_TOKEN');
+$trelloBoardId = $setting('TRELLO_BOARD_ID');
 
 $missingSettings = [];
 foreach (['DB_NAME' => $databaseName, 'DB_USER' => $databaseUser, 'DB_PASSWORD' => $databasePassword] as $name => $value) {
@@ -208,6 +211,74 @@ function escape(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
+
+function trelloGet(string $path, string $apiKey, string $apiToken, string $fields): array
+{
+    $query = http_build_query([
+        'key' => $apiKey,
+        'token' => $apiToken,
+        'fields' => $fields,
+    ]);
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'GET',
+            'header' => "Accept: application/json\r\n",
+            'timeout' => 15,
+            'ignore_errors' => true,
+        ],
+    ]);
+    $body = @file_get_contents('https://api.trello.com/1/' . ltrim($path, '/') . '?' . $query, false, $context);
+    $statusLine = $http_response_header[0] ?? '';
+    if (!preg_match('/\s(\d{3})\s/', $statusLine, $match)) {
+        throw new RuntimeException('Keine HTTP-Antwort von Trello erhalten.');
+    }
+    $status = (int) $match[1];
+    if ($status < 200 || $status >= 300) {
+        throw new RuntimeException('Trello antwortete mit HTTP ' . $status . '.');
+    }
+    $data = json_decode((string) $body, true);
+    if (!is_array($data)) {
+        throw new RuntimeException('Trello lieferte keine gültige JSON-Antwort.');
+    }
+    return $data;
+}
+
+$trelloLists = [];
+$trelloError = null;
+$missingTrelloSettings = [];
+foreach ([
+    'TRELLO_API_KEY' => $trelloApiKey,
+    'TRELLO_API_TOKEN' => $trelloApiToken,
+    'TRELLO_BOARD_ID' => $trelloBoardId,
+] as $name => $value) {
+    if ($value === null || trim($value) === '') {
+        $missingTrelloSettings[] = $name;
+    }
+}
+if ($missingTrelloSettings !== []) {
+    $trelloError = 'Trello-Einstellungen fehlen: ' . implode(', ', $missingTrelloSettings) . '.';
+} else {
+    try {
+        $trelloLists = trelloGet(
+            'boards/' . rawurlencode($trelloBoardId) . '/lists',
+            $trelloApiKey,
+            $trelloApiToken,
+            'id,name,closed'
+        );
+        foreach ($trelloLists as &$trelloList) {
+            $trelloList['cards'] = trelloGet(
+                'lists/' . rawurlencode((string) ($trelloList['id'] ?? '')) . '/cards',
+                $trelloApiKey,
+                $trelloApiToken,
+                'id,name,desc,url,shortUrl,closed'
+            );
+        }
+        unset($trelloList);
+    } catch (RuntimeException $exception) {
+        $trelloLists = [];
+        $trelloError = $exception->getMessage();
+    }
+}
 ?>
 <!doctype html>
 <html lang="de">
@@ -230,6 +301,9 @@ function escape(string $value): string
         .edit-form label { display: grid; gap: .2rem; }
         input, select, button { font: inherit; padding: .35rem; }
         .pagination { justify-content: space-between; }
+        .trello-list { margin: 1rem 0; padding: .75rem 1rem; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); border-radius: .5rem; }
+        .trello-card { margin: .75rem 0; }
+        .trello-card-desc { white-space: pre-wrap; color: GrayText; }
     </style>
 </head>
 <body>
@@ -244,7 +318,48 @@ function escape(string $value): string
             <a href="README.md">README (English)</a>
             <a href="docs/database.de.md">Datenbank einrichten</a>
             <a href="docs/database.md">Database setup</a>
+            <a href="docs/trello-integration.de.md">Trello-Anleitung</a>
         </nav>
+
+        <section aria-labelledby="trello-heading">
+            <h2 id="trello-heading">Trello-Board</h2>
+            <?php if ($trelloError !== null): ?>
+                <p class="status" role="status"><?= escape($trelloError) ?></p>
+            <?php elseif ($trelloLists === []): ?>
+                <p>Das Board enthält keine offenen Listen.</p>
+            <?php else: ?>
+                <?php foreach ($trelloLists as $trelloList): ?>
+                    <details class="trello-list">
+                        <summary><?= escape((string) ($trelloList['name'] ?? 'Liste')) ?> · <?= count($trelloList['cards'] ?? []) ?> Karten</summary>
+                        <?php if (($trelloList['cards'] ?? []) === []): ?>
+                            <p>Keine Karten in dieser Liste.</p>
+                        <?php else: ?>
+                            <?php foreach ($trelloList['cards'] as $trelloCard): ?>
+                                <?php
+                                $cardUrl = (string) ($trelloCard['url'] ?? $trelloCard['shortUrl'] ?? '');
+                                $cardUrlParts = parse_url($cardUrl);
+                                $safeCardUrl = is_array($cardUrlParts)
+                                    && strtolower($cardUrlParts['scheme'] ?? '') === 'https'
+                                    && strtolower($cardUrlParts['host'] ?? '') === 'trello.com';
+                                ?>
+                                <article class="trello-card">
+                                    <?php if ($safeCardUrl): ?>
+                                        <a href="<?= escape($cardUrl) ?>" target="_blank" rel="noopener noreferrer">
+                                            <?= escape((string) ($trelloCard['name'] ?? 'Karte ohne Titel')) ?> ↗
+                                        </a>
+                                    <?php else: ?>
+                                        <strong><?= escape((string) ($trelloCard['name'] ?? 'Karte ohne Titel')) ?></strong>
+                                    <?php endif; ?>
+                                    <?php if (!empty($trelloCard['desc'])): ?>
+                                        <div class="trello-card-desc"><?= escape((string) $trelloCard['desc']) ?></div>
+                                    <?php endif; ?>
+                                </article>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </details>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </section>
 
         <?php if ($databaseConnected): ?>
             <section aria-labelledby="jobs-heading">

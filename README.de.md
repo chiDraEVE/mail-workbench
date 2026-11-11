@@ -106,8 +106,9 @@ Die aktuelle lokale PHP-Seite zeigt gespeicherte Jobs an und ermöglicht manuell
 
 ### Phase 5 – Trello-Integration und optionale Anreicherung
 
+- [x] Listen und Karten des konfigurierten Trello-Boards in der Übersicht anzeigen
+- [x] API-Key, Token und Board-ID aus lokaler `.env` lesen und Listen-IDs dynamisch abrufen
 - [ ] Manuell ausgewählte Anzeigen an Trello-Boards übergeben
-- [ ] Trello-Zugangsdaten und Ziel-Board/-Liste außerhalb der Versionsverwaltung konfigurieren
 - [ ] Optional Stellenbeschreibungen von Plattformseiten abrufen und plattformübergreifend vergleichen
 - [ ] Optional Verfügbarkeit von Anzeigen prüfen
 
@@ -240,7 +241,7 @@ Der Import verändert keine Mailboxdaten und archiviert oder löscht keine Nachr
 
 <badge color="warning">Frühe Entwicklung</badge>
 
-Das Projekt befindet sich in einer frühen Entwicklungsphase. Der lokale Thunderbird-Import, die Extraktion von Stellenanzeigen, die URL-Normalisierung, ein einfacher Abgleich gleicher URLs beziehungsweise gleicher Stellenbezeichnungen und Unternehmen sowie eine PHP-Übersicht mit klickbaren Links, Filtern und manueller Bearbeitung sind umgesetzt. Als Nächstes folgt die Trello-Integration. Die Verknüpfung zu den Ursprungs-E-Mails ist in der Datenbank vorhanden.
+Das Projekt befindet sich in einer frühen Entwicklungsphase. Der lokale Thunderbird-Import, die Extraktion von Stellenanzeigen, die URL-Normalisierung, ein einfacher Abgleich gleicher URLs beziehungsweise gleicher Stellenbezeichnungen und Unternehmen, eine PHP-Übersicht mit klickbaren Links, Filtern und manueller Bearbeitung sowie die schreibgeschützte Anzeige der Trello-Listen und -Karten sind umgesetzt. Das Übertragen ausgewählter Jobs an Trello steht noch aus. Die Verknüpfung zu den Ursprungs-E-Mails ist in der Datenbank vorhanden.
 
 Funktionen und Architekturentscheidungen können sich im weiteren Entwicklungsverlauf ändern.
 

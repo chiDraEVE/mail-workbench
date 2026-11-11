@@ -106,8 +106,9 @@ The current local PHP page reports stored jobs and supports manual corrections. 
 
 ### Phase 5 – Trello integration and optional enrichment
 
+- [x] Read the configured Trello board's lists and cards in the reporting page
+- [x] Read the API key, token and board ID from local `.env`; fetch list IDs dynamically
 - [ ] Send manually selected listings to Trello boards
-- [ ] Configure Trello credentials and target board/list outside version control
 - [ ] Optionally fetch platform descriptions and compare listings across platforms
 - [ ] Optionally check listing availability
 
@@ -265,10 +266,11 @@ Fassung](docs/email-import.md) is also available.
 <badge color="warning">Early development</badge>
 
 The project is in early development. Local Thunderbird import, job extraction,
-URL normalization, basic matching by URL or matching title and company, and a
-PHP reporting page with clickable links, filters and manual editing are
-implemented. The next phase is Trello integration. Links between listings and
-their source emails are stored in the database.
+URL normalization, basic matching by URL or matching title and company, a PHP
+reporting page with clickable links, filters and manual editing, and
+read-only display of Trello lists and cards are implemented. Sending selected
+jobs to Trello remains to be implemented. Links between listings and their
+source emails are stored in the database.
 
 Features and architectural decisions may change as development progresses.
 
